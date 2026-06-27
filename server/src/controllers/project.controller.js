@@ -133,6 +133,12 @@ const getProjectDetails = async (req, res) => {
       },
     });
 
+    if (!project) {
+      return res.status(404).json({
+        message: "Project not found",
+      });
+    }
+
     const formattedProject = {
       id: project.id,
       name: project.name,
@@ -170,7 +176,11 @@ const joinProject = async (req, res) => {
   try {
     const { inviteCode } = req.body;
 
-    
+    if (!inviteCode) {
+      return res.status(400).json({
+        message: "Invite code is required",
+      });
+    }
 
     const project = await prisma.project.findUnique({
       where: {
@@ -178,11 +188,7 @@ const joinProject = async (req, res) => {
       },
     });
 
-    if (!inviteCode) {
-      return res.status(400).json({
-        message: "Invite code is required",
-      });
-    }
+    
 
     if (!project) {
       return res.status(404).json({
