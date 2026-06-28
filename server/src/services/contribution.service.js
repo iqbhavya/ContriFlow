@@ -1,4 +1,7 @@
 const prisma = require("../lib/prisma");
+const { requireProjectMember,
+        requireProjectLead 
+      } = require("../utils/projectAuth");
 
 const createContributionService = async ({
   submittedById,
@@ -97,6 +100,77 @@ const createContributionService = async ({
 
 };
 
+
+
+const reviewContributionService = async ({
+  reviewerId,
+  contributionId,
+  status,
+  feedback,
+}) => {
+
+  const contribution = await prisma.contribution.findUnique({
+    where: {
+      id: contributionId,
+    },
+
+    include: {
+      task: true,
+    },
+  });
+
+  if (!contribution) {
+    const error = new Error("Contribution not found");
+    error.status = 404;
+    throw error;
+  }
+
+  if (contribution.status !== "PENDING") {
+    const error = new Error("Contribution has already been reviewed");
+    error.status = 409;
+    throw error;
+  }
+
+  const membership = await requireProjectLead(
+    reviewerId,
+    contribution.task.projectId
+  );
+
+  if (membership === null) {
+    const error = new Error("You are not a member of this project");
+    error.status = 403;
+    throw error;
+  }
+
+  if (membership === false) {
+    const error = new Error("Only project leads can review contributions");
+    error.status = 403;
+    throw error;
+  }
+
+  const updatedContribution = await prisma.contribution.update({
+    where: {
+      id: contributionId,
+    },
+
+    data: {
+      status,
+      feedback,
+      reviewedAt: new Date(),
+      reviewedById: reviewerId,
+    },
+  });
+
+  return {
+    id: updatedContribution.id,
+    title: updatedContribution.title,
+    status: updatedContribution.status,
+    feedback: updatedContribution.feedback,
+    reviewedAt: updatedContribution.reviewedAt,
+  };
+};
+
 module.exports = {
   createContributionService,
+  reviewContributionService,
 };
