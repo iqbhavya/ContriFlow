@@ -237,9 +237,129 @@ const joinProject = async (req, res) => {
   }
 };
 
+const getProjectTasks = async (req,res) => {
+
+  try {
+
+    const  projectId  = Number(req.params.projectId);
+
+    if(Number.isNaN(projectId)){
+      return res.status(500).json({
+        message: "Invalid project ID",
+      });
+    }
+
+    const project = await prisma.project.findUnique({
+
+      where: {
+        id: projectId,
+      },
+
+      include: {
+        createdBy: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+    })
+
+    if(!project){
+      return res.status(404).json({
+        message: "Project not found",
+      });
+    }
+
+    const projectMembership = await prisma.projectMember.findUnique({
+      where: {
+        userId_projectId: {
+          userId: req.user.userId,
+          projectId: projectId,
+        },
+      },
+    });
+
+    if (!projectMembership) {
+      return res.status(403).json({
+        message: "You are not a member of this project",
+      });
+    }
+    
+    const projectTask = await prisma.task.findMany({
+      where : {
+        projectId : projectId, 
+      },
+
+      include: {
+        createdBy: {
+            select: {
+                id: true,
+                name: true,
+            },
+        },
+
+        members: {
+            include: {
+                user: {
+                    select: {
+                        id: true,
+                        name: true,
+                    },
+                },
+            },
+        },
+      },
+      orderBy: {
+        createdAt: "desc",
+      }
+    })
+
+    const formattedTasks = projectTask.map((task) => ({
+      id: task.id,
+      title: task.title,
+      description: task.description,
+      status: task.status,
+      deadline: task.deadline,
+      createdAt: task.createdAt,
+
+      createdBy: task.createdBy,
+
+      assignees: task.members.map((member) => ({
+        id: member.user.id,
+        name: member.user.name,
+        assignedAt: member.assignedAt,
+        roleInTask: member.roleInTask,
+      })),
+    }));
+
+    return res.status(200).json({
+      project: {
+        id: project.id,
+        name: project.name,
+        description: project.description,
+        inviteCode: project.inviteCode,
+        createdAt: project.createdAt,
+        createdBy: project.createdBy,
+      },
+      tasks: formattedTasks,
+    });
+
+  } catch(error) {
+    console.error(error);
+
+    res.status(500).json({
+      message: "Internal Server Error",
+    });
+  }
+}
+
+
+
 module.exports = {
   createProject,
   getMyProjects,
   getProjectDetails,
   joinProject,
+  getProjectTasks,
 };
