@@ -1,7 +1,8 @@
 const prisma = require("../lib/prisma");
-const { requireProjectMember,
-        requireProjectLead 
-      } = require("../utils/projectAuth");
+const {
+  requireProjectMember,
+  requireProjectLead,
+} = require("../utils/projectAuth");
 
 const createContributionService = async ({
   submittedById,
@@ -11,7 +12,6 @@ const createContributionService = async ({
   proofUrl,
   contributors,
 }) => {
-
   // Task exists?
   const task = await prisma.task.findUnique({
     where: {
@@ -51,13 +51,9 @@ const createContributionService = async ({
     },
   });
 
-  const assignedIds = new Set(
-    assignedMembers.map((member) => member.userId)
-  );
+  const assignedIds = new Set(assignedMembers.map((member) => member.userId));
 
-  const invalidContributors = contributors.filter(
-    (id) => !assignedIds.has(id)
-  );
+  const invalidContributors = contributors.filter((id) => !assignedIds.has(id));
 
   if (invalidContributors.length > 0) {
     const error = new Error("Some contributors are not assigned to this task");
@@ -68,7 +64,6 @@ const createContributionService = async ({
 
   // Transaction
   const contribution = await prisma.$transaction(async (tx) => {
-
     const createdContribution = await tx.contribution.create({
       data: {
         title,
@@ -87,7 +82,6 @@ const createContributionService = async ({
     });
 
     return createdContribution;
-
   });
 
   return {
@@ -97,10 +91,7 @@ const createContributionService = async ({
     taskId: contribution.taskId,
     contributors,
   };
-
 };
-
-
 
 const reviewContributionService = async ({
   reviewerId,
@@ -108,7 +99,6 @@ const reviewContributionService = async ({
   status,
   feedback,
 }) => {
-
   const contribution = await prisma.contribution.findUnique({
     where: {
       id: contributionId,
@@ -133,7 +123,7 @@ const reviewContributionService = async ({
 
   const membership = await requireProjectLead(
     reviewerId,
-    contribution.task.projectId
+    contribution.task.projectId,
   );
 
   if (membership === null) {
@@ -170,11 +160,7 @@ const reviewContributionService = async ({
   };
 };
 
-const getTaskContributionsService = async ({
-  userId,
-  taskId,
-}) => {
-
+const getTaskContributionsService = async ({ userId, taskId }) => {
   // Check task exists
   const task = await prisma.task.findUnique({
     where: {
@@ -198,10 +184,7 @@ const getTaskContributionsService = async ({
   }
 
   // Check project membership
-  const membership = await requireProjectMember(
-    userId,
-    task.projectId
-  );
+  const membership = await requireProjectMember(userId, task.projectId);
 
   if (!membership) {
     const error = new Error("You are not a member of this project");
@@ -216,7 +199,6 @@ const getTaskContributionsService = async ({
     },
 
     include: {
-
       submittedBy: {
         select: {
           id: true,
@@ -280,11 +262,113 @@ const getTaskContributionsService = async ({
       })),
     })),
   };
+};
 
+const getContributionDetailsService = async ({ userId, contributionId }) => {
+  const contribution = await prisma.contribution.findUnique({
+    where: {
+      id: contributionId,
+    },
+
+    include: {
+      task: {
+        include: {
+          project: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
+      },
+
+      submittedBy: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+
+      reviewedBy: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+
+      contributors: {
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  if (!contribution) {
+    const error = new Error("Contribution not found");
+    error.status = 404;
+    throw error;
+  }
+
+  const membership = await requireProjectMember(
+    userId,
+    contribution.task.project.id,
+  );
+
+  if (!membership) {
+    const error = new Error("You are not a member of this project");
+    error.status = 403;
+    throw error;
+  }
+
+  return {
+    id: contribution.id,
+
+    title: contribution.title,
+
+    description: contribution.description,
+
+    proofUrl: contribution.proofUrl,
+
+    status: contribution.status,
+
+    createdAt: contribution.createdAt,
+
+    updatedAt: contribution.updatedAt,
+
+    reviewedAt: contribution.reviewedAt,
+
+    feedback: contribution.feedback,
+
+    task: {
+      id: contribution.task.id,
+      title: contribution.task.title,
+    },
+
+    project: contribution.task.project,
+
+    submittedBy: contribution.submittedBy,
+
+    reviewedBy: contribution.reviewedBy,
+
+    contributors: contribution.contributors.map((member) => ({
+      id: member.user.id,
+      name: member.user.name,
+      email: member.user.email,
+      addedAt: member.addedAt,
+    })),
+  };
 };
 
 module.exports = {
   createContributionService,
   reviewContributionService,
   getTaskContributionsService,
+  getContributionDetailsService,
 };

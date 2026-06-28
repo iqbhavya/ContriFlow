@@ -1,14 +1,10 @@
 const prisma = require("../lib/prisma");
-const { requireProjectMember,
-        requireProjectLead 
-      } = require("../utils/projectAuth");
+const {
+  requireProjectMember,
+  requireProjectLead,
+} = require("../utils/projectAuth");
 
-const createTaskService = async ({
-  userId,
-  title,
-  description,
-  projectId,
-}) => {
+const createTaskService = async ({ userId, title, description, projectId }) => {
   // Check project
   const project = await prisma.project.findUnique({
     where: {
@@ -23,10 +19,7 @@ const createTaskService = async ({
   }
 
   // Check lead
-  const projectMembership = await requireProjectLead(
-    userId,
-    projectId
-  );
+  const projectMembership = await requireProjectLead(userId, projectId);
 
   if (projectMembership === null) {
     const error = new Error("You are not a member of this project");
@@ -54,12 +47,7 @@ const createTaskService = async ({
   return task;
 };
 
-
-const assignTaskService = async ({
-  userId,
-  taskId,
-  assigneeIds,
-}) => {
+const assignTaskService = async ({ userId, taskId, assigneeIds }) => {
   // Find task
   const task = await prisma.task.findUnique({
     where: {
@@ -74,10 +62,7 @@ const assignTaskService = async ({
   }
 
   // Check lead
-  const membership = await requireProjectLead(
-    userId,
-    task.projectId
-  );
+  const membership = await requireProjectLead(userId, task.projectId);
 
   if (membership === null) {
     const error = new Error("You are not a member of this project");
@@ -101,13 +86,9 @@ const assignTaskService = async ({
     },
   });
 
-  const memberIds = new Set(
-    assigneeMembership.map((member) => member.userId)
-  );
+  const memberIds = new Set(assigneeMembership.map((member) => member.userId));
 
-  const invalidAssignees = assigneeIds.filter(
-    (id) => !memberIds.has(id)
-  );
+  const invalidAssignees = assigneeIds.filter((id) => !memberIds.has(id));
 
   if (invalidAssignees.length > 0) {
     const error = new Error("Some users are not members of this project");
@@ -127,12 +108,10 @@ const assignTaskService = async ({
   });
 
   const assignedIds = new Set(
-    existingTaskMembers.map((member) => member.userId)
+    existingTaskMembers.map((member) => member.userId),
   );
 
-  const alreadyAssigned = assigneeIds.filter((id) =>
-    assignedIds.has(id)
-  );
+  const alreadyAssigned = assigneeIds.filter((id) => assignedIds.has(id));
 
   if (alreadyAssigned.length > 0) {
     const error = new Error("Some users are already assigned");
@@ -195,10 +174,7 @@ const getTaskDetailsService = async ({ userId, taskId }) => {
     throw error;
   }
 
-  const membership = await requireProjectMember(
-    userId,
-    task.project.id
-  );
+  const membership = await requireProjectMember(userId, task.project.id);
 
   if (!membership) {
     const error = new Error("You are not a member of this project");
@@ -248,10 +224,7 @@ const updateTaskService = async ({
   }
 
   // Check if user is project lead
-  const membership = await requireProjectLead(
-    userId,
-    task.projectId
-  );
+  const membership = await requireProjectLead(userId, task.projectId);
 
   if (membership === null) {
     const error = new Error("You are not a member of this project");
@@ -291,11 +264,9 @@ const updateTaskService = async ({
   return updatedTask;
 };
 
-
-
 module.exports = {
-  createTaskService,  
+  createTaskService,
   assignTaskService,
-  getTaskDetailsService,  
+  getTaskDetailsService,
   updateTaskService,
 };

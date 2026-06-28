@@ -1,6 +1,7 @@
 const { createContributionService, 
         reviewContributionService,
         getTaskContributionsService,
+        getContributionDetailsService,
 } = require("../services/contribution.service");
 
 const createContribution = async (req, res) => {
@@ -138,8 +139,35 @@ const getTaskContributions = async (req, res) => {
   }
 };
 
+const getContributionDetails = async (req, res) => {
+  try {
+    const contributionId = Number(req.params.contributionId);
+
+    if (Number.isNaN(contributionId)) {
+      return res.status(400).json({
+        message: "Invalid contribution ID",
+      });
+    }
+
+    const contribution = await getContributionDetailsService({
+      userId: req.user.userId,
+      contributionId,
+    });
+
+    return res.status(200).json(contribution);
+
+  } catch (error) {
+    console.error(error);
+
+    return res.status(error.status || 500).json({
+      message: error.message || "Internal Server Error",
+    });
+  }
+};
+
 module.exports = {
   createContribution,
   reviewContribution,
   getTaskContributions,
+  getContributionDetails,
 };
