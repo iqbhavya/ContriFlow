@@ -202,7 +202,107 @@ const assignTask = async (req, res) => {
   }
 };
 
+const getTaskDetails = async (req, res) => {
+  try {
+    const taskId = Number(req.params.taskId);
+
+    if (Number.isNaN(taskId)) {
+      return res.status(400).json({
+        message: "Invalid task ID",
+      });
+    }
+
+    // Find task
+    const task = await prisma.task.findUnique({
+      where: {
+        id: taskId,
+      },
+
+      include: {
+        project: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+
+        createdBy: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+
+        members: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!task) {
+      return res.status(404).json({
+        message: "Task not found",
+      });
+    }
+
+    // Check membership
+    const projectMembership = await prisma.projectMember.findUnique({
+      where: {
+        userId_projectId: {
+          userId: req.user.userId,
+          projectId: task.project.id,
+        },
+      },
+    });
+
+    if (!projectMembership) {
+      return res.status(403).json({
+        message: "You are not a member of this project",
+      });
+    }
+
+    // Format response
+    const formattedTask = {
+      id: task.id,
+      title: task.title,
+      description: task.description,
+      status: task.status,
+      deadline: task.deadline,
+      createdAt: task.createdAt,
+
+      project: task.project,
+
+      createdBy: task.createdBy,
+
+      assignees: task.members.map((member) => ({
+        id: member.user.id,
+        name: member.user.name,
+        assignedAt: member.assignedAt,
+        roleInTask: member.roleInTask,
+      })),
+    };
+
+    return res.status(200).json(formattedTask);
+
+  } catch (error) {
+    console.error(error);
+
+    return res.status(500).json({
+      message: "Internal Server Error",
+    });
+  }
+};
+
+
 module.exports = {
   createTask,
   assignTask,
+  getTaskDetails,
 };
