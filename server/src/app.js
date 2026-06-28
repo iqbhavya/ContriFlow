@@ -7,8 +7,8 @@ const authRoutes = require("./routes/auth.routes");
 const auth = require("./middleware/auth");
 
 const projectRoutes = require("./routes/project.routes");
-
 const taskRoutes = require("./routes/task.routes");
+const contributionRoutes = require("./routes/contribution.routes");
 
 const app = express();
 
@@ -20,6 +20,8 @@ app.use("/api/auth", authRoutes);
 app.use("/api/projects", projectRoutes);
 
 app.use("/api/tasks" , taskRoutes);
+
+app.use("/api/contributions", contributionRoutes);
 
 app.get("/me", auth, (req, res) => {
   res.json({
