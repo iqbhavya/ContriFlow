@@ -1,4 +1,14 @@
 const prisma = require("../lib/prisma");
+const { requireProjectMember,
+        requireProjectLead 
+      } = require("../utils/projectAuth");
+
+const { createTaskService,  
+        assignTaskService,
+        getTaskDetailsService,  
+        updateTaskService,
+      } = require("../services/task.service");
+
 
 const createTask = async (req, res) => {
   try {
@@ -10,50 +20,14 @@ const createTask = async (req, res) => {
       });
     }
 
-    const project = await prisma.project.findUnique({
-      where: {
-        id: projectId,
-      },
+    const task = await createTaskService({
+      userId: req.user.userId,
+      title,
+      description,
+      projectId,
     });
 
-    if (!project) {
-      return res.status(404).json({
-        message: "Project not found",
-      });
-    }
-
-    const projectMembership = await prisma.projectMember.findUnique({
-      where: {
-        userId_projectId: {
-          userId: req.user.userId,
-          projectId,
-        },
-      },
-    });
-
-    if (!projectMembership) {
-      return res.status(403).json({
-        message: "You are not a member of this project",
-      });
-    }
-
-    if (projectMembership.role !== "LEAD") {
-      return res.status(403).json({
-        message: "Only project leads can create tasks",
-      });
-    }
-
-    const task = await prisma.task.create({
-      data: {
-        title,
-        description,
-        projectId,
-        createdById: req.user.userId,
-        status: "TODO",
-      },
-    });
-
-    res.status(201).json({
+    return res.status(201).json({
       message: "Task created successfully",
       task: {
         id: task.id,
@@ -62,18 +36,26 @@ const createTask = async (req, res) => {
         projectId: task.projectId,
       },
     });
+
   } catch (error) {
     console.error(error);
-    res.status(500).json({
-      message: "Internal Server Error",
+
+    return res.status(error.status || 500).json({
+      message: error.message || "Internal Server Error",
     });
   }
 };
 
 const assignTask = async (req, res) => {
   try {
-    let { assigneeIds } = req.body;
     const taskId = Number(req.params.taskId);
+    let { assigneeIds } = req.body;
+
+    if (Number.isNaN(taskId)) {
+      return res.status(400).json({
+        message: "Invalid task ID",
+      });
+    }
 
     if (!Array.isArray(assigneeIds)) {
       return res.status(400).json({
@@ -83,124 +65,44 @@ const assignTask = async (req, res) => {
 
     assigneeIds = [...new Set(assigneeIds)];
 
-    if (Number.isNaN(taskId)) {
+    if (assigneeIds.length === 0) {
       return res.status(400).json({
-        message: "Invalid task ID",
+        message: "Assignee IDs are required",
       });
     }
 
-    if (!assigneeIds || assigneeIds.length === 0) {
-      return res.status(400).json({
-        message: "Assignee ID are required",
-      });
-    }
-
-    const task = await prisma.task.findUnique({
-      where: {
-        id: taskId,
-      },
+    const result = await assignTaskService({
+      userId: req.user.userId,
+      taskId,
+      assigneeIds,
     });
 
-    if (!task) {
-      return res.status(404).json({
-        message: "Task not found",
-      });
-    }
-
-    const projectMembership = await prisma.projectMember.findUnique({
-      where: {
-        userId_projectId: {
-          userId: req.user.userId,
-          projectId: task.projectId,
-        },
-      },
-    });
-
-    if (!projectMembership) {
-      return res.status(403).json({
-        message: "You are not a member of this project",
-      });
-    }
-
-    if (projectMembership.role !== "LEAD") {
-      return res.status(403).json({
-        message: "Only project leads can assign tasks",
-      });
-    }
-
-    const assigneeMembership = await prisma.projectMember.findMany({
-      where: {
-        userId: {
-          in: assigneeIds,
-        },
-        projectId: task.projectId,
-      },
-    });
-
-    const memberIds = new Set(
-      assigneeMembership.map((member) => member.userId),
-    );
-
-    const invalidAssignees = assigneeIds.filter((id) => !memberIds.has(id));
-
-    if (invalidAssignees.length > 0) {
-      return res.status(403).json({
-        message: "Some users are not members of this project",
-        invalidAssignees,
-      });
-    }
-
-    const taskAssignments = assigneeIds.map((userId) => ({
-      taskId: task.id,
-      userId,
-    }));
-
-    const existingTaskMember = await prisma.taskMember.findMany({
-      where: {
-        taskId,
-        userId: {
-          in: assigneeIds,
-        },
-      },
-    });
-
-    const assignedIds = new Set(
-      existingTaskMember.map((member) => member.userId),
-    );
-
-    const alreadyAssigned = assigneeIds.filter((id) => assignedIds.has(id));
-
-    if (alreadyAssigned.length > 0) {
-      return res.status(409).json({
-        message: "Some users are already assigned to this task",
-        alreadyAssigned,
-      });
-    }
-
-    const assignedMembers = await prisma.$transaction(async (tx) => {
-      const created = await tx.taskMember.createMany({
-        data: assigneeIds.map((userId) => ({
-          taskId,
-          userId,
-        })),
-      });
-
-      return created;
-    });
-
-    res.status(200).json({
+    return res.status(200).json({
       message: "Task assigned successfully",
-      assignedCount: assignedMembers.count,
-      assignedUsers: assigneeIds,
+      assignedCount: result.assignedCount,
+      assignedUsers: result.assignedUsers,
     });
+
   } catch (error) {
     console.error(error);
 
-    res.status(500).json({
-      message: "Internal Server Error",
-    });
+    const response = {
+      message: error.message || "Internal Server Error",
+    };
+
+    if (error.invalidAssignees) {
+      response.invalidAssignees = error.invalidAssignees;
+    }
+
+    if (error.alreadyAssigned) {
+      response.alreadyAssigned = error.alreadyAssigned;
+    }
+
+    return res.status(error.status || 500).json(response);
   }
 };
+
+
 
 const getTaskDetails = async (req, res) => {
   try {
@@ -212,93 +114,23 @@ const getTaskDetails = async (req, res) => {
       });
     }
 
-    // Find task
-    const task = await prisma.task.findUnique({
-      where: {
-        id: taskId,
-      },
-
-      include: {
-        project: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-
-        createdBy: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-
-        members: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                name: true,
-              },
-            },
-          },
-        },
-      },
+    const task = await getTaskDetailsService({
+      userId: req.user.userId,
+      taskId,
     });
 
-    if (!task) {
-      return res.status(404).json({
-        message: "Task not found",
-      });
-    }
-
-    // Check membership
-    const projectMembership = await prisma.projectMember.findUnique({
-      where: {
-        userId_projectId: {
-          userId: req.user.userId,
-          projectId: task.project.id,
-        },
-      },
-    });
-
-    if (!projectMembership) {
-      return res.status(403).json({
-        message: "You are not a member of this project",
-      });
-    }
-
-    // Format response
-    const formattedTask = {
-      id: task.id,
-      title: task.title,
-      description: task.description,
-      status: task.status,
-      deadline: task.deadline,
-      createdAt: task.createdAt,
-
-      project: task.project,
-
-      createdBy: task.createdBy,
-
-      assignees: task.members.map((member) => ({
-        id: member.user.id,
-        name: member.user.name,
-        assignedAt: member.assignedAt,
-        roleInTask: member.roleInTask,
-      })),
-    };
-
-    return res.status(200).json(formattedTask);
+    return res.status(200).json(task);
 
   } catch (error) {
     console.error(error);
 
-    return res.status(500).json({
-      message: "Internal Server Error",
+    return res.status(error.status || 500).json({
+      message: error.message || "Internal Server Error",
     });
   }
 };
+
+
 
 const updateTask = async (req, res) => {
   try {
@@ -322,62 +154,12 @@ const updateTask = async (req, res) => {
       });
     }
 
-    
-    const task = await prisma.task.findUnique({
-      where: {
-        id: taskId,
-      },
-    });
-
-    if (!task) {
-      return res.status(404).json({
-        message: "Task not found",
-      });
-    }
-
-    
-    const projectMembership = await prisma.projectMember.findUnique({
-      where: {
-        userId_projectId: {
-          userId: req.user.userId,
-          projectId: task.projectId,
-        },
-      },
-    });
-
-    if (!projectMembership) {
-      return res.status(403).json({
-        message: "You are not a member of this project",
-      });
-    }
-
-    if (projectMembership.role !== "LEAD") {
-      return res.status(403).json({
-        message: "Only project leads can update tasks",
-      });
-    }
-
-    
-    const updateData = {};
-
-    if (title !== undefined) {
-      updateData.title = title;
-    }
-
-    if (description !== undefined) {
-      updateData.description = description;
-    }
-
-    if (deadline !== undefined) {
-      updateData.deadline = deadline;
-    }
-
-    
-    const updatedTask = await prisma.task.update({
-      where: {
-        id: taskId,
-      },
-      data: updateData,
+    const updatedTask = await updateTaskService({
+      userId: req.user.userId,
+      taskId,
+      title,
+      description,
+      deadline,
     });
 
     return res.status(200).json({
@@ -390,12 +172,11 @@ const updateTask = async (req, res) => {
         status: updatedTask.status,
       },
     });
-
   } catch (error) {
     console.error(error);
 
-    return res.status(500).json({
-      message: "Internal Server Error",
+    return res.status(error.status || 500).json({
+      message: error.message || "Internal Server Error",
     });
   }
 };

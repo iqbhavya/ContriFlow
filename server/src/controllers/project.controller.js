@@ -1,4 +1,8 @@
 const prisma = require("../lib/prisma");
+const { requireProjectMember,
+  requireProjectLead 
+} = require("../utils/projectAuth");
+
 
 const createProject = async (req, res) => {
   try {
@@ -81,14 +85,10 @@ const getProjectDetails = async (req, res) => {
       });
     }
 
-    const projectMembership = await prisma.projectMember.findUnique({
-      where: {
-        userId_projectId: {
-          userId: req.user.userId,
-          projectId: projectId,
-        },
-      },
-    });
+    const projectMembership = await requireProjectMember(
+        req.user.userId,
+        projectId
+    );
 
     if (!projectMembership) {
       return res.status(403).json({
@@ -111,7 +111,7 @@ const getProjectDetails = async (req, res) => {
 
         members: {
           orderBy: {
-            role: "asc",
+            role: "desc",
           },
           include: {
             user: {
@@ -271,14 +271,10 @@ const getProjectTasks = async (req,res) => {
       });
     }
 
-    const projectMembership = await prisma.projectMember.findUnique({
-      where: {
-        userId_projectId: {
-          userId: req.user.userId,
-          projectId: projectId,
-        },
-      },
-    });
+    const projectMembership = await requireProjectMember(
+        req.user.userId,
+        projectId
+    );
 
     if (!projectMembership) {
       return res.status(403).json({
