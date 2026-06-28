@@ -300,9 +300,109 @@ const getTaskDetails = async (req, res) => {
   }
 };
 
+const updateTask = async (req, res) => {
+  try {
+    const taskId = Number(req.params.taskId);
+
+    if (Number.isNaN(taskId)) {
+      return res.status(400).json({
+        message: "Invalid task ID",
+      });
+    }
+
+    const { title, description, deadline } = req.body;
+
+    if (
+      title === undefined &&
+      description === undefined &&
+      deadline === undefined
+    ) {
+      return res.status(400).json({
+        message: "No fields provided to update",
+      });
+    }
+
+    
+    const task = await prisma.task.findUnique({
+      where: {
+        id: taskId,
+      },
+    });
+
+    if (!task) {
+      return res.status(404).json({
+        message: "Task not found",
+      });
+    }
+
+    
+    const projectMembership = await prisma.projectMember.findUnique({
+      where: {
+        userId_projectId: {
+          userId: req.user.userId,
+          projectId: task.projectId,
+        },
+      },
+    });
+
+    if (!projectMembership) {
+      return res.status(403).json({
+        message: "You are not a member of this project",
+      });
+    }
+
+    if (projectMembership.role !== "LEAD") {
+      return res.status(403).json({
+        message: "Only project leads can update tasks",
+      });
+    }
+
+    
+    const updateData = {};
+
+    if (title !== undefined) {
+      updateData.title = title;
+    }
+
+    if (description !== undefined) {
+      updateData.description = description;
+    }
+
+    if (deadline !== undefined) {
+      updateData.deadline = deadline;
+    }
+
+    
+    const updatedTask = await prisma.task.update({
+      where: {
+        id: taskId,
+      },
+      data: updateData,
+    });
+
+    return res.status(200).json({
+      message: "Task updated successfully",
+      task: {
+        id: updatedTask.id,
+        title: updatedTask.title,
+        description: updatedTask.description,
+        deadline: updatedTask.deadline,
+        status: updatedTask.status,
+      },
+    });
+
+  } catch (error) {
+    console.error(error);
+
+    return res.status(500).json({
+      message: "Internal Server Error",
+    });
+  }
+};
 
 module.exports = {
   createTask,
   assignTask,
   getTaskDetails,
+  updateTask,
 };
