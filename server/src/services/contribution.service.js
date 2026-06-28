@@ -170,7 +170,121 @@ const reviewContributionService = async ({
   };
 };
 
+const getTaskContributionsService = async ({
+  userId,
+  taskId,
+}) => {
+
+  // Check task exists
+  const task = await prisma.task.findUnique({
+    where: {
+      id: taskId,
+    },
+
+    include: {
+      project: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+    },
+  });
+
+  if (!task) {
+    const error = new Error("Task not found");
+    error.status = 404;
+    throw error;
+  }
+
+  // Check project membership
+  const membership = await requireProjectMember(
+    userId,
+    task.projectId
+  );
+
+  if (!membership) {
+    const error = new Error("You are not a member of this project");
+    error.status = 403;
+    throw error;
+  }
+
+  // Get contributions
+  const contributions = await prisma.contribution.findMany({
+    where: {
+      taskId,
+    },
+
+    include: {
+
+      submittedBy: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+
+      reviewedBy: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+
+      contributors: {
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
+      },
+    },
+
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+
+  return {
+    task: {
+      id: task.id,
+      title: task.title,
+      project: task.project,
+    },
+
+    contributions: contributions.map((contribution) => ({
+      id: contribution.id,
+      title: contribution.title,
+      description: contribution.description,
+      proofUrl: contribution.proofUrl,
+
+      status: contribution.status,
+
+      createdAt: contribution.createdAt,
+      updatedAt: contribution.updatedAt,
+      reviewedAt: contribution.reviewedAt,
+
+      feedback: contribution.feedback,
+
+      submittedBy: contribution.submittedBy,
+
+      reviewedBy: contribution.reviewedBy,
+
+      contributors: contribution.contributors.map((member) => ({
+        id: member.user.id,
+        name: member.user.name,
+        addedAt: member.addedAt,
+      })),
+    })),
+  };
+
+};
+
 module.exports = {
   createContributionService,
   reviewContributionService,
+  getTaskContributionsService,
 };
