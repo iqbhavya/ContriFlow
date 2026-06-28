@@ -4,7 +4,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url = env("DATABASE_URL")
+  url      = env("DATABASE_URL")
 }
 
 enum ProjectRole {
@@ -31,14 +31,15 @@ model User {
   password  String
   createdAt DateTime @default(now())
 
-  createdProjects        Project[] @relation("CreatedProjects")
+  createdProjects Project[] @relation("CreatedProjects")
 
   createdTasks Task[] @relation("CreatedTasks")
 
   projectMemberships      ProjectMember[]
   taskAssignments         TaskMember[]
   contributionMemberships ContributionMember[]
-  submittedContributions  Contribution[] @relation("SubmittedContributions")
+  submittedContributions  Contribution[]       @relation("SubmittedContributions")
+  reviewedContributions   Contribution[]       @relation("ReviewedContributions")
 }
 
 model Project {
@@ -47,27 +48,26 @@ model Project {
   description String?
   inviteCode  String   @unique
   createdAt   DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  updatedAt   DateTime @updatedAt
 
   createdById Int
   createdBy   User @relation("CreatedProjects", fields: [createdById], references: [id])
 
-  members       ProjectMember[]
-  tasks         Task[]
-  contributions Contribution[]
+  members ProjectMember[]
+  tasks   Task[]
 }
 
 model ProjectMember {
-  id        Int         @id @default(autoincrement())
-  role      ProjectRole @default(MEMBER)
+  id   Int         @id @default(autoincrement())
+  role ProjectRole @default(MEMBER)
 
-  joinedAt  DateTime    @default(now())
+  joinedAt DateTime @default(now())
 
   userId    Int
   projectId Int
 
-  user       User    @relation(fields: [userId], references: [id])
-  project    Project @relation(fields: [projectId], references: [id])
+  user    User    @relation(fields: [userId], references: [id])
+  project Project @relation(fields: [projectId], references: [id])
 
   @@unique([userId, projectId])
 }
@@ -79,7 +79,7 @@ model Task {
   deadline    DateTime?
   status      TaskStatus @default(TODO)
   createdAt   DateTime   @default(now())
-  updatedAt DateTime @updatedAt
+  updatedAt   DateTime   @updatedAt
 
   projectId Int
   project   Project @relation(fields: [projectId], references: [id])
@@ -92,7 +92,7 @@ model Task {
 }
 
 model TaskMember {
-  id         Int    @id @default(autoincrement())
+  id         Int     @id @default(autoincrement())
   roleInTask String?
 
   assignedAt DateTime @default(now())
@@ -107,22 +107,29 @@ model TaskMember {
 }
 
 model Contribution {
-  id          Int                @id @default(autoincrement())
+  id Int @id @default(autoincrement())
+
   title       String
   description String?
-  proofLink   String?
-  status      ContributionStatus @default(PENDING)
-  createdAt   DateTime           @default(now())
+
+  proofUrl String? @db.Text
+
+  status ContributionStatus @default(PENDING)
+
+  createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  projectId Int
-  project   Project @relation(fields: [projectId], references: [id])
+  reviewedAt DateTime?
+  feedback   String?
+
+  taskId Int
+  task   Task @relation(fields: [taskId], references: [id])
 
   submittedById Int
   submittedBy   User @relation("SubmittedContributions", fields: [submittedById], references: [id])
 
-  taskId Int?
-  task   Task? @relation(fields: [taskId], references: [id])
+  reviewedById Int?
+  reviewedBy   User? @relation("ReviewedContributions", fields: [reviewedById], references: [id])
 
   contributors ContributionMember[]
 }
