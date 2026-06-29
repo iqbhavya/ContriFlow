@@ -9,6 +9,7 @@ const auth = require("./middleware/auth");
 const projectRoutes = require("./routes/project.routes");
 const taskRoutes = require("./routes/task.routes");
 const contributionRoutes = require("./routes/contribution.routes");
+const dashboardRoutes = require("./routes/dashboard.routes");
 
 const app = express();
 
@@ -22,6 +23,8 @@ app.use("/api/projects", projectRoutes);
 app.use("/api/tasks" , taskRoutes);
 
 app.use("/api/contributions", contributionRoutes);
+
+app.use("/api/dashboard", dashboardRoutes);
 
 app.get("/me", auth, (req, res) => {
   res.json({
