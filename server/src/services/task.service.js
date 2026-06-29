@@ -269,9 +269,74 @@ const updateTaskService = async ({
   return updatedTask;
 };
 
+const deleteTaskService = async ({ taskId, userId }) => {
+  const task = await prisma.task.findUnique({
+    where: {
+      id: taskId,
+    },
+  });
+
+  if (!task) {
+    const error = new Error("Task not found");
+    error.status = 404;
+    throw error;
+  }
+
+  const membership = await requireProjectLead(
+    userId,
+    task.projectId
+  );
+
+  if(membership === null){
+    const error = new Error(
+      "You are not a member of this project"
+    );
+    error.status = 403;
+    throw error;
+  }
+
+  if(membership === false) {
+    const error = new Error(
+      "Only project leads can delete tasks"
+    );
+    error.status = 403;
+    throw error;
+  }
+
+  await prisma.$transaction(async (tx) => {
+
+    await tx.contributionMember.deleteMany({
+      where: {
+        contribution: {
+          taskId,
+        },
+      }
+    });
+
+    await tx.contribution.deleteMany({
+      where: {
+        taskId,
+      },
+    });
+
+    await tx.taskMember.deleteMany({
+      where: {
+        taskId,
+      },
+    });
+
+    await tx.task.delete({
+      where: {
+        id: taskId,
+      },
+    });
+  });
+};
+
 module.exports = {
   createTaskService,
   assignTaskService,
   getTaskDetailsService,
   updateTaskService,
+  deleteTaskService,
 };
