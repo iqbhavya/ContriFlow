@@ -497,10 +497,74 @@ const updateContributionService = async ({
   return updatedContribution;
 };
 
+const deleteContributionService = async ({
+  contributionId,
+  userId,
+}) => {
+
+  const contribution = await prisma.contribution.findUnique({
+    where: {
+      id: contributionId,
+    },
+
+    include: {
+      task: true,
+    },
+  });
+
+  if (!contribution) {
+    const error = new Error("Contribution not found");
+    error.status = 404;
+    throw error;
+  }
+
+  const membership = await requireProjectLead(
+    userId,
+    contribution.task.projectId
+  );
+
+  const isOwner =
+    contribution.submittedById === userId;
+
+  if (membership === null && !isOwner) {
+    const error = new Error(
+      "You are not a member of this project"
+    );
+    error.status = 403;
+    throw error;
+  }
+
+  if (membership === false && !isOwner) {
+    const error = new Error(
+      "You are not allowed to delete this contribution"
+    );
+    error.status = 403;
+    throw error;
+  }
+
+  await prisma.$transaction(async (tx) => {
+
+    await tx.contributionMember.deleteMany({
+      where: {
+        contributionId,
+      },
+    });
+
+    await tx.contribution.delete({
+      where: {
+        id: contributionId,
+      },
+    });
+
+  });
+
+};
+
 module.exports = {
   createContributionService,
   reviewContributionService,
   getTaskContributionsService,
   getContributionDetailsService,
   updateContributionService,
+  deleteContributionService,
 };

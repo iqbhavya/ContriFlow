@@ -3,6 +3,7 @@ const { createContributionService,
         getTaskContributionsService,
         getContributionDetailsService,
         updateContributionService,
+        deleteContributionService,
 } = require("../services/contribution.service");
 
 const createContribution = async (req, res) => {
@@ -196,10 +197,39 @@ const updateContribution = async (req, res) => {
   }
 };
 
+const deleteContribution = async (req, res) => {
+  try {
+    const contributionId = Number(req.params.contributionId);
+
+    if (Number.isNaN(contributionId)) {
+      return res.status(400).json({
+        message: "Invalid contribution ID",
+      });
+    }
+
+    await deleteContributionService({
+      contributionId,
+      userId: req.user.userId,
+    });
+
+    return res.status(200).json({
+      message: "Contribution deleted successfully",
+    });
+
+  } catch (error) {
+    console.error(error);
+
+    return res.status(error.status || 500).json({
+      message: error.message || "Internal Server Error",
+    });
+  }
+};
+
 module.exports = {
   createContribution,
   reviewContribution,
   getTaskContributions,
   getContributionDetails,
   updateContribution,
+  deleteContribution,
 };
