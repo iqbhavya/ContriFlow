@@ -209,6 +209,7 @@ const updateTaskService = async ({
   title,
   description,
   deadline,
+  status,
 }) => {
   // Find task
   const task = await prisma.task.findUnique({
@@ -251,6 +252,10 @@ const updateTaskService = async ({
 
   if (deadline !== undefined) {
     updateData.deadline = deadline;
+  }
+
+  if (status !== undefined) {
+    updateData.status = status;
   }
 
   // Update task

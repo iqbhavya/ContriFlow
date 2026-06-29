@@ -1,14 +1,15 @@
 const prisma = require("../lib/prisma");
-const { requireProjectMember,
-        requireProjectLead 
-      } = require("../utils/projectAuth");
+const {
+  requireProjectMember,
+  requireProjectLead,
+} = require("../utils/projectAuth");
 
-const { createTaskService,  
-        assignTaskService,
-        getTaskDetailsService,  
-        updateTaskService,
-      } = require("../services/task.service");
-
+const {
+  createTaskService,
+  assignTaskService,
+  getTaskDetailsService,
+  updateTaskService,
+} = require("../services/task.service");
 
 const createTask = async (req, res) => {
   try {
@@ -36,7 +37,6 @@ const createTask = async (req, res) => {
         projectId: task.projectId,
       },
     });
-
   } catch (error) {
     console.error(error);
 
@@ -82,7 +82,6 @@ const assignTask = async (req, res) => {
       assignedCount: result.assignedCount,
       assignedUsers: result.assignedUsers,
     });
-
   } catch (error) {
     console.error(error);
 
@@ -102,8 +101,6 @@ const assignTask = async (req, res) => {
   }
 };
 
-
-
 const getTaskDetails = async (req, res) => {
   try {
     const taskId = Number(req.params.taskId);
@@ -120,7 +117,6 @@ const getTaskDetails = async (req, res) => {
     });
 
     return res.status(200).json(task);
-
   } catch (error) {
     console.error(error);
 
@@ -129,8 +125,6 @@ const getTaskDetails = async (req, res) => {
     });
   }
 };
-
-
 
 const updateTask = async (req, res) => {
   try {
@@ -142,15 +136,24 @@ const updateTask = async (req, res) => {
       });
     }
 
-    const { title, description, deadline } = req.body;
+    const { title, description, deadline, status } = req.body;
 
     if (
       title === undefined &&
       description === undefined &&
-      deadline === undefined
+      deadline === undefined &&
+      status === undefined
     ) {
       return res.status(400).json({
         message: "No fields provided to update",
+      });
+    }
+
+    const validStatuses = ["TODO", "IN_PROGRESS", "DONE"];
+
+    if (status !== undefined && !validStatuses.includes(status)) {
+      return res.status(400).json({
+        message: "Invalid task status",
       });
     }
 
@@ -160,6 +163,7 @@ const updateTask = async (req, res) => {
       title,
       description,
       deadline,
+      status
     });
 
     return res.status(200).json({
@@ -170,6 +174,7 @@ const updateTask = async (req, res) => {
         description: updatedTask.description,
         deadline: updatedTask.deadline,
         status: updatedTask.status,
+        updatedAt: updatedTask.updatedAt,
       },
     });
   } catch (error) {
