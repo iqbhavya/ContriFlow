@@ -366,9 +366,141 @@ const getContributionDetailsService = async ({ userId, contributionId }) => {
   };
 };
 
+const updateContributionService = async ({
+  contributionId,
+  userId,
+  title,
+  description,
+  proofUrl,
+  contributorIds,
+}) => {
+
+  const contribution = await prisma.contribution.findUnique({
+    where: {
+      id: contributionId,
+    },
+
+    include: {
+      task: true,
+    },
+  });
+
+  if (!contribution) {
+    const error = new Error("Contribution not found");
+    error.status = 404;
+    throw error;
+  }
+
+  const membership = await requireProjectLead(
+    userId,
+    contribution.task.projectId
+  );
+
+  const isOwner =
+    contribution.submittedById === userId;
+
+  if (membership === null && !isOwner) {
+    const error = new Error(
+      "You are not a member of this project"
+    );
+    error.status = 403;
+    throw error;
+  }
+
+  if (membership === false && !isOwner) {
+    const error = new Error(
+      "You are not allowed to edit this contribution"
+    );
+    error.status = 403;
+    throw error;
+  }
+
+  const updateData = {};
+
+  if (title !== undefined)
+    updateData.title = title;
+
+  if (description !== undefined)
+    updateData.description = description;
+
+  if (proofUrl !== undefined)
+    updateData.proofUrl = proofUrl;
+
+  // Reset review
+  updateData.status = "PENDING";
+  updateData.feedback = null;
+  updateData.reviewedAt = null;
+  updateData.reviewedById = null;
+
+  const updatedContribution =
+    await prisma.$transaction(async (tx) => {
+
+      if (Array.isArray(contributorIds)) {
+
+        const members =
+          await tx.projectMember.findMany({
+            where: {
+              projectId:
+                contribution.task.projectId,
+
+              userId: {
+                in: contributorIds,
+              },
+            },
+          });
+
+        if (members.length !== contributorIds.length) {
+          const error = new Error(
+            "Some contributors are not members of this project"
+          );
+          error.status = 400;
+          throw error;
+        }
+
+        await tx.contributionMember.deleteMany({
+          where: {
+            contributionId,
+          },
+        });
+
+        await tx.contributionMember.createMany({
+          data: contributorIds.map((userId) => ({
+            contributionId,
+            userId,
+          })),
+        });
+      }
+
+      return await tx.contribution.update({
+        where: {
+          id: contributionId,
+        },
+
+        data: updateData,
+
+        include: {
+          contributors: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  name: true,
+                },
+              },
+            },
+          },
+        },
+      });
+
+    });
+
+  return updatedContribution;
+};
+
 module.exports = {
   createContributionService,
   reviewContributionService,
   getTaskContributionsService,
   getContributionDetailsService,
+  updateContributionService,
 };
