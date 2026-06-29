@@ -5,16 +5,11 @@ const {
   requireProjectLead,
 } = require("../utils/projectAuth");
 
-const getProjectDashboardService = async ({
-  userId,
-  projectId,
-}) => {
+const { getMemberStats } = require("../utils/memberStats");
 
+const getProjectDashboardService = async ({ userId, projectId }) => {
   // Check membership
-  const membership = await requireProjectMember(
-    userId,
-    projectId
-  );
+  const membership = await requireProjectMember(userId, projectId);
 
   if (!membership) {
     const error = new Error("You are not a member of this project");
@@ -43,7 +38,7 @@ const getProjectDashboardService = async ({
   }
 
   // Member count
-  const members = await prisma.projectMember.count({
+  const memberCount = await prisma.projectMember.count({
     where: {
       projectId,
     },
@@ -102,15 +97,55 @@ const getProjectDashboardService = async ({
   });
 
   const totalContributions =
-    pendingContributions +
-    approvedContributions +
-    rejectedContributions;
+    pendingContributions + approvedContributions + rejectedContributions;
+
+  // Get all project members
+  const projectMembers = await prisma.projectMember.findMany({
+    where: {
+      projectId,
+    },
+    include: {
+      user: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+    },
+  });
+
+  const leaderboard = await Promise.all(
+    projectMembers.map(async (member) => {
+      const stats = await getMemberStats(member.user.id, projectId);
+
+      return {
+        id: member.user.id,
+        name: member.user.name,
+        ...stats,
+      };
+    }),
+  );
+
+  // Sort leaderboard
+  leaderboard.sort((a, b) => {
+    if (b.approvedContributions !== a.approvedContributions) {
+      return b.approvedContributions - a.approvedContributions;
+    }
+
+    return b.approvalRate - a.approvalRate;
+  });
+
+  // Add ranks
+  const rankedLeaderboard = leaderboard.map((member, index) => ({
+    rank: index + 1,
+    ...member,
+  }));
 
   return {
     project,
 
     stats: {
-      members,
+      members: memberCount,
 
       tasks: totalTasks,
       todoTasks,
@@ -122,9 +157,62 @@ const getProjectDashboardService = async ({
       approvedContributions,
       rejectedContributions,
     },
+
+    leaderboard: rankedLeaderboard,
   };
+};
+
+const getMemberStatisticsService = async ({ userId, projectId }) => {
+  const membership = await requireProjectMember(userId, projectId);
+
+  if (!membership) {
+    const error = new Error("You are not a member of this project");
+    error.status = 403;
+    throw error;
+  }
+
+  const projectMembers = await prisma.projectMember.findMany({
+    where: {
+      projectId,
+    },
+
+    include: {
+      user: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+        },
+      },
+    },
+  });
+
+  const statistics = await Promise.all(
+    projectMembers.map(async (member) => {
+      const stats = await getMemberStats(member.user.id, projectId);
+
+      return {
+        id: member.user.id,
+        name: member.user.name,
+        email: member.user.email,
+        role: member.role,
+        ...stats,
+      };
+    }),
+  );
+
+  statistics.sort((a, b) => {
+    if (b.approvedContributions !== a.approvedContributions) {
+      return b.approvedContributions - a.approvedContributions;
+    }
+
+    return b.approvalRate - a.approvalRate;
+  });
+
+  return statistics;
 };
 
 module.exports = {
   getProjectDashboardService,
+  getMemberStatisticsService,
 };
