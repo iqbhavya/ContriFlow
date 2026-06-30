@@ -11,6 +11,8 @@ import ProjectsPage from "../pages/project/ProjectsPage";
 import ProjectDetailsPage from "../pages/project/ProjectDetailsPage";
 import TaskDetailsPage from "../pages/task/TaskDetailsPage";
 import ContributionPage from "../pages/contribution/ContributionPage";
+import ProtectedRoute from "./ProtectedRoute";
+
 
 function AppRouter() {
   return (
@@ -20,7 +22,14 @@ function AppRouter() {
 
         <Route path="/signup" element={<SignupPage />} />
 
-        <Route path="/dashboard" element={<DashboardPage />} />
+        <Route
+            path="/dashboard"
+            element={
+                <ProtectedRoute>
+                <DashboardPage />
+                </ProtectedRoute>
+            }
+            />
 
         <Route path="/projects" element={<ProjectsPage />} />
 
