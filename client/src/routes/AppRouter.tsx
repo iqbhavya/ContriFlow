@@ -18,7 +18,7 @@ function AppRouter() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<LoginPage />} />
+        <Route path="/login" element={<LoginPage />} />
 
         <Route path="/signup" element={<SignupPage />} />
 
@@ -31,7 +31,12 @@ function AppRouter() {
             }
             />
 
-        <Route path="/projects" element={<ProjectsPage />} />
+        <Route path="/projects" element={
+          <ProtectedRoute>
+            <ProjectsPage />
+          </ProtectedRoute>
+          
+          } />
 
         <Route
           path="/projects/:projectId"

@@ -8,6 +8,7 @@ import {
 
 type AuthContextType = {
   token: string | null;
+  authLoading: boolean;
   login: (token: string) => void;
   logout: () => void;
 };
@@ -21,6 +22,7 @@ export function AuthProvider({
 }) {
 
   const [token, setToken] = useState<string | null>(null);
+  const [authLoading, setAuthLoading] = useState(true);
 
   useEffect(() => {
 
@@ -30,6 +32,7 @@ export function AuthProvider({
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setToken(storedToken);
     }
+    setAuthLoading(false);
 
   }, []);
 
@@ -51,6 +54,7 @@ export function AuthProvider({
     <AuthContext.Provider
       value={{
         token,
+        authLoading,
         login,
         logout,
       }}

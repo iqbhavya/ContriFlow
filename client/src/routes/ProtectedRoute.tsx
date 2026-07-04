@@ -8,10 +8,14 @@ function ProtectedRoute({
   children: React.ReactNode;
 }) {
 
-  const { token } = useAuth();
+  const { token , authLoading  } = useAuth();
+
+  if (authLoading) {
+    return <h2>Loading...</h2>;
+  }
 
   if (!token) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/login" replace />;
   }
 
   return children;
