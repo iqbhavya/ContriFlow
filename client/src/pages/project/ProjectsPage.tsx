@@ -1,5 +1,15 @@
-import { useEffect,useState } from "react";
+import { useEffect, useState } from "react";
 import { getMyProjects } from "../../services/project.service";
+
+import { Button } from "../../components/ui/button";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+} from "../../components/ui/card";
+import { Badge } from "../../components/ui/badge";
 
 type Project = {
   id: number;
@@ -9,7 +19,6 @@ type Project = {
 };
 
 function ProjectsPage() {
-
   const [projects, setProjects] = useState<Project[]>([]);
 
   const [loading, setLoading] = useState(true);
@@ -17,23 +26,19 @@ function ProjectsPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-   
     const fetchProjects = async () => {
       try {
         const data = await getMyProjects();
 
         setProjects(data);
-      
-      
       } catch {
         setError("Failed to fetch projects");
       } finally {
         setLoading(false);
-    }
-  };
+      }
+    };
 
     fetchProjects();
-  
   }, []);
 
   if (loading) {
@@ -54,18 +59,39 @@ function ProjectsPage() {
   }
 
   return (
-  <div>
-    <h1>My Projects</h1>
+    <div className="max-w-5xl mx-auto p-6 py-10">
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-3xl font-bold">My Projects</h1>
 
-    {projects.map((project) => (
-      <div key={project.id}>
-        <h2>{project.name}</h2>
-        <p>{project.description}</p>
-        <p>{project.role}</p>
+        <div className="flex gap-3">
+          <Button>Create Project</Button>
+          <Button variant="outline">Join Project</Button>
+        </div>
       </div>
-    ))}
-  </div>
+
+      {projects.map((project) => (
+        <Card key={project.id} className="mb-4">
+          <CardHeader>
+            <CardTitle>{project.name}</CardTitle>
+
+            <CardDescription>{project.description}</CardDescription>
+          </CardHeader>
+
+          <CardContent>
+            <div className="flex items-center justify-between">
+              <Badge
+                variant={project.role === "LEAD" ? "default" : "secondary"}
+              >
+                {project.role}
+              </Badge>
+
+              <Button variant="outline">Open Project</Button>
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
   );
-};
+}
 
 export default ProjectsPage;
