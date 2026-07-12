@@ -22,19 +22,23 @@ function ProjectsPage() {
 
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchProjects = async () => {
+  const fetchProjects = async () => {
       try {
         const data = await getMyProjects();
 
         setProjects(data);
-      } catch {
+      } catch (error){
+        console.log(error);
         setError("Failed to fetch projects");
       } finally {
         setLoading(false);
       }
     };
 
+  useEffect(() => {
+    
+
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchProjects();
   }, []);
 
@@ -61,7 +65,9 @@ function ProjectsPage() {
         <h1 className="text-3xl font-bold">My Projects</h1>
 
         <div className="flex gap-3">
-          <CreateProjectDialog />
+          <CreateProjectDialog
+            onProjectCreated={fetchProjects}
+          />
           <Button variant="outline">Join Project</Button>
         </div>
       </div>

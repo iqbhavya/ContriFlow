@@ -1,4 +1,5 @@
 import api from "../services/api"; // or "../services/api" depending on where your api.ts is
+import type { CreateProjectForm } from "../lib/validations/project.schema";
 
 export const getMyProjects = async () => {
   const response = await api.get("/projects");
@@ -6,3 +7,7 @@ export const getMyProjects = async () => {
   return response.data;
 };
 
+export const createProject = async (data: CreateProjectForm) => {
+  const response = await api.post("/projects", data);
+  return response.data;
+};
