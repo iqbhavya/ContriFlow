@@ -6,3 +6,4 @@ type Project = {
 };
 
 export type { Project };
+

@@ -14,13 +14,19 @@ import { Label } from "../ui/label";
 
 import { useForm } from "react-hook-form";
 
-type CreateProjectForm = {
-  name: string;
-  description: string;
-};
+import { zodResolver } from "@hookform/resolvers/zod";
+
+import {
+  createProjectSchema,
+  type CreateProjectForm,
+} from "../../lib/validations/project.schema";
+
+
 
 function CreateProjectDialog() {
-  const form = useForm<CreateProjectForm>();
+  const form = useForm<CreateProjectForm>({
+    resolver: zodResolver(createProjectSchema),
+  });
 
   const onSubmit = (data: CreateProjectForm) => {
     console.log(data);
