@@ -13,7 +13,7 @@ import { Textarea } from "../ui/textarea";
 import { Label } from "../ui/label";
 
 import { useForm } from "react-hook-form";
-
+import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import {
@@ -23,6 +23,8 @@ import {
 
 import { createProject } from "../../services/project.service";
 
+
+
 type CreateProjectDialogProps = {
   onProjectCreated: () => void;
 };
@@ -31,18 +33,22 @@ function CreateProjectDialog({ onProjectCreated }: CreateProjectDialogProps) {
   const form = useForm<CreateProjectForm>({
     resolver: zodResolver(createProjectSchema),
   });
-
-  
+  const [open, setOpen] = useState(false);
 
   const onSubmit = async (data: CreateProjectForm) => {
-    await createProject(data);
-    form.reset();
+    try {
+      await createProject(data);
 
-    onProjectCreated();
+      form.reset();
+      setOpen(false);
+
+      onProjectCreated();
+    } catch (error) {
+      console.error(error);
+    }
   };
-
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button>Create Project</Button>
       </DialogTrigger>
@@ -76,7 +82,6 @@ function CreateProjectDialog({ onProjectCreated }: CreateProjectDialogProps) {
                 placeholder="Enter project description"
                 {...form.register("description")}
               />
-              
 
               {form.formState.errors.description && (
                 <p className="text-sm text-red-500">
