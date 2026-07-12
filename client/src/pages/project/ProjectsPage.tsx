@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { getMyProjects } from "../../services/project.service";
+import CreateProjectDialog from "../../components/project/CreateProjectDialog";
+
 
 import { Button } from "../../components/ui/button";
 import {
@@ -11,12 +13,7 @@ import {
 } from "../../components/ui/card";
 import { Badge } from "../../components/ui/badge";
 
-type Project = {
-  id: number;
-  name: string;
-  description: string | null;
-  role: "LEAD" | "MEMBER";
-};
+import type { Project } from "../../types/project";
 
 function ProjectsPage() {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -64,7 +61,7 @@ function ProjectsPage() {
         <h1 className="text-3xl font-bold">My Projects</h1>
 
         <div className="flex gap-3">
-          <Button>Create Project</Button>
+          <CreateProjectDialog />
           <Button variant="outline">Join Project</Button>
         </div>
       </div>
