@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { getMyProjects } from "../../services/project.service";
 import CreateProjectDialog from "../../components/project/CreateProjectDialog";
 
-
 import { Button } from "../../components/ui/button";
 import {
   Card,
@@ -15,6 +14,11 @@ import { Badge } from "../../components/ui/badge";
 
 import type { Project } from "../../types/project";
 
+import { useNavigate } from "react-router-dom";
+
+// eslint-disable-next-line react-hooks/rules-of-hooks
+
+
 function ProjectsPage() {
   const [projects, setProjects] = useState<Project[]>([]);
 
@@ -22,22 +26,22 @@ function ProjectsPage() {
 
   const [error, setError] = useState<string | null>(null);
 
-  const fetchProjects = async () => {
-      try {
-        const data = await getMyProjects();
+  const navigate = useNavigate();
 
-        setProjects(data);
-      } catch (error){
-        console.log(error);
-        setError("Failed to fetch projects");
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchProjects = async () => {
+    try {
+      const data = await getMyProjects();
+
+      setProjects(data);
+    } catch (error) {
+      console.log(error);
+      setError("Failed to fetch projects");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    
-
     // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchProjects();
   }, []);
@@ -65,9 +69,7 @@ function ProjectsPage() {
         <h1 className="text-3xl font-bold">My Projects</h1>
 
         <div className="flex gap-3">
-          <CreateProjectDialog
-            onProjectCreated={fetchProjects}
-          />
+          <CreateProjectDialog onProjectCreated={fetchProjects} />
           <Button variant="outline">Join Project</Button>
         </div>
       </div>
@@ -88,7 +90,12 @@ function ProjectsPage() {
                 {project.role}
               </Badge>
 
-              <Button variant="outline">Open Project</Button>
+              <Button
+                variant="outline"
+                onClick={() => navigate(`/projects/${project.id}`)}
+              >
+                Open Project
+              </Button>
             </div>
           </CardContent>
         </Card>

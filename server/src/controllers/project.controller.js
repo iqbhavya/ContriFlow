@@ -126,7 +126,6 @@ const getProjectDetails = async (req, res) => {
         _count: {
           select: {
             tasks: true,
-            contributions: true,
             members: true,
           },
         },
@@ -143,7 +142,7 @@ const getProjectDetails = async (req, res) => {
       id: project.id,
       name: project.name,
       description: project.description,
-      inviteCode: project.inviteCode,
+      
       createdAt: project.createdAt,
 
       createdBy: project.createdBy,
@@ -161,6 +160,10 @@ const getProjectDetails = async (req, res) => {
         contributions: project._count.contributions,
       },
     };
+
+    if(projectMembership.role === "LEAD") {
+      formattedProject.inviteCode = project.inviteCode;
+    }
 
     return res.status(200).json(formattedProject);
   } catch (error) {

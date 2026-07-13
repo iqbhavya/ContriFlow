@@ -11,3 +11,8 @@ export const createProject = async (data: CreateProjectForm) => {
   const response = await api.post("/projects", data);
   return response.data;
 };
+
+export const getProject = async (projectId: string) => {
+  const response = await api.get(`/projects/${projectId}`);
+  return response.data;
+}

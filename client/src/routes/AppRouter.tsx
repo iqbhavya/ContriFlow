@@ -26,7 +26,7 @@ function AppRouter() {
             path="/dashboard"
             element={
                 <ProtectedRoute>
-                <DashboardPage />
+                  <DashboardPage />
                 </ProtectedRoute>
             }
             />
@@ -40,7 +40,11 @@ function AppRouter() {
 
         <Route
           path="/projects/:projectId"
-          element={<ProjectDetailsPage />}
+          element={
+          <ProtectedRoute>
+            <ProjectDetailsPage />
+          </ProtectedRoute>
+          }
         />
 
         <Route
