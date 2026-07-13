@@ -9,13 +9,28 @@ export type ProjectDetails = {
   id: number;
   name: string;
   description: string | null;
+
   role: "LEAD" | "MEMBER";
-  inviteCode?: string;
+
+  createdAt: string;
+
+  createdBy: {
+    id: number;
+    name: string;
+  };
+
   members: {
     id: number;
     name: string;
-    email: string;
     role: "LEAD" | "MEMBER";
+    joinedAt: string;
   }[];
-};
 
+  stats: {
+    members: number;
+    tasks: number;
+    contributions: number;
+  };
+
+  inviteCode?: string;
+};

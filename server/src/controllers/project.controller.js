@@ -142,7 +142,7 @@ const getProjectDetails = async (req, res) => {
       id: project.id,
       name: project.name,
       description: project.description,
-      
+      role: projectMembership.role,
       createdAt: project.createdAt,
 
       createdBy: project.createdBy,
