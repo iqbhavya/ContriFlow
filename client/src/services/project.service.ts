@@ -1,4 +1,4 @@
-import api from "../services/api"; // or "../services/api" depending on where your api.ts is
+import api from "../services/api"; 
 import type { CreateProjectForm } from "../lib/validations/project.schema";
 
 export const getMyProjects = async () => {
