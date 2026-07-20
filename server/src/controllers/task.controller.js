@@ -14,7 +14,7 @@ const {
 
 const createTask = async (req, res) => {
   try {
-    const { title, description, projectId } = req.body;
+    const { title, description, projectId, deadline } = req.body;
 
     if (!title || !projectId) {
       return res.status(400).json({
@@ -27,6 +27,7 @@ const createTask = async (req, res) => {
       title,
       description,
       projectId,
+      deadline,
     });
 
     return res.status(201).json({

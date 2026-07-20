@@ -27,16 +27,28 @@ type EditTaskDialogProps = {
     id: number;
     title: string;
     description: string | null;
+    deadline: string | null;
   };
   onTaskUpdated: () => void;
 };
 
 export default function EditTaskDialog({ task, onTaskUpdated }: EditTaskDialogProps) {
+  const getFormattedDate = (dateStr: string | null) => {
+    if (!dateStr) return "";
+    try {
+      const date = new Date(dateStr);
+      return date.toISOString().split("T")[0];
+    } catch (e) {
+      return "";
+    }
+  };
+
   const form = useForm<CreateTaskForm>({
     resolver: zodResolver(createTaskSchema),
     defaultValues: {
       title: task.title,
       description: task.description || "",
+      deadline: getFormattedDate(task.deadline),
     },
   });
   const [open, setOpen] = useState(false);
@@ -95,6 +107,20 @@ export default function EditTaskDialog({ task, onTaskUpdated }: EditTaskDialogPr
               {form.formState.errors.description && (
                 <p className="text-sm text-red-500">
                   {form.formState.errors.description.message}
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="deadline">Deadline</Label>
+              <Input
+                id="deadline"
+                type="date"
+                {...form.register("deadline")}
+              />
+              {form.formState.errors.deadline && (
+                <p className="text-sm text-red-500">
+                  {form.formState.errors.deadline.message}
                 </p>
               )}
             </div>

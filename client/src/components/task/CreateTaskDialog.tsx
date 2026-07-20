@@ -107,6 +107,20 @@ function CreateTaskDialog({ projectId, onTaskCreated }: CreateTaskDialogProps){
               )}
             </div>
 
+            <div className="space-y-2">
+              <Label htmlFor="deadline">Deadline</Label>
+              <Input
+                id="deadline"
+                type="date"
+                {...form.register("deadline")}
+              />
+              {form.formState.errors.deadline && (
+                <p className="text-sm text-red-500">
+                  {form.formState.errors.deadline.message}
+                </p>
+              )}
+            </div>
+
             <Button type="submit" className="w-full">
               Create Task
             </Button>

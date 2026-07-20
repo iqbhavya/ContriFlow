@@ -4,7 +4,7 @@ const {
   requireProjectLead,
 } = require("../utils/projectAuth");
 
-const createTaskService = async ({ userId, title, description, projectId }) => {
+const createTaskService = async ({ userId, title, description, projectId, deadline }) => {
   // Check project
   const project = await prisma.project.findUnique({
     where: {
@@ -41,6 +41,7 @@ const createTaskService = async ({ userId, title, description, projectId }) => {
       projectId,
       createdById: userId,
       status: "TODO",
+      deadline: deadline ? new Date(deadline) : null,
     },
   });
 
@@ -259,7 +260,7 @@ const updateTaskService = async ({
   }
 
   if (deadline !== undefined) {
-    updateData.deadline = deadline;
+    updateData.deadline = deadline ? new Date(deadline) : null;
   }
 
   if (status !== undefined) {

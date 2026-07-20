@@ -12,7 +12,10 @@ export const createTaskSchema = z.object({
     .trim()
     .max(300, "Description cannot exceed 300 characters."),
 
-  
+  deadline: z
+    .string()
+    .optional()
+    .or(z.literal("")),
 });
 
 export type CreateTaskForm = z.infer<typeof createTaskSchema>;
