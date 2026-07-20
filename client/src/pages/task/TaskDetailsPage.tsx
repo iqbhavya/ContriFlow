@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
-import { getTask } from "../../services/task.service";
+import { getTask, updateTask } from "../../services/task.service";
 import type { Task } from "../../types/task";
 
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
 import AssignMembersDialog from "../../components/task/AssignMembersDialog";
+import { toast } from "sonner";
 
 
 function TaskDetailsPage() {
@@ -16,6 +17,8 @@ function TaskDetailsPage() {
 
   const [task, setTask] = useState<Task | null>(null);
   const [loading, setLoading] = useState(true);
+  const [status, setStatus] = useState<"TODO" | "IN_PROGRESS" | "DONE" >("TODO");
+  const [updatingStatus, setUpdatingStatus] = useState(false);
 
   const fetchTask = async () => {
     try {
@@ -24,10 +27,26 @@ function TaskDetailsPage() {
       const data = await getTask(Number(taskId));
       console.log(data);
       setTask(data);
+      setStatus(data.status);
     } catch (error) {
       console.error(error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleUpdateStatus = async () => {
+    try {
+      setUpdatingStatus(true);
+      if (!taskId) return;
+      await updateTask(Number(taskId), { status });
+      toast.success("Task status updated successfully!");
+      fetchTask();
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to update task status");
+    } finally {
+      setUpdatingStatus(false);
     }
   };
 
@@ -136,6 +155,28 @@ function TaskDetailsPage() {
           )}
         </CardContent>
       </Card>
+
+      {task.role === "LEAD" && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Update Status</CardTitle>
+          </CardHeader>
+          <CardContent className="flex items-center gap-4">
+            <select
+              value={status}
+              onChange={(e) => setStatus(e.target.value as "TODO" | "IN_PROGRESS" | "DONE")}
+              className="h-8 w-48 rounded-lg border border-input bg-transparent px-2.5 py-1 text-base transition-colors outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:text-sm dark:bg-input/30"
+            >
+              <option value="TODO" className="dark:bg-slate-900 text-foreground">TODO</option>
+              <option value="IN_PROGRESS" className="dark:bg-slate-900 text-foreground">IN PROGRESS</option>
+              <option value="DONE" className="dark:bg-slate-900 text-foreground">DONE</option>
+            </select>
+            <Button onClick={handleUpdateStatus} disabled={updatingStatus}>
+              {updatingStatus ? "Saving..." : "Save"}
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader>

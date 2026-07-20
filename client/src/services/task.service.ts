@@ -32,3 +32,11 @@ export const getProjectMembers = async (projectId: number) => {
   const response = await api.get(`/dashboard/${projectId}/members`);
   return response.data.members;
 };
+
+export const updateTask = async (
+  taskId: number,
+  data: { title?: string; description?: string; deadline?: string; status?: "TODO" | "IN_PROGRESS" | "DONE" }
+) => {
+  const response = await api.patch(`/tasks/${taskId}`, data);
+  return response.data;
+};

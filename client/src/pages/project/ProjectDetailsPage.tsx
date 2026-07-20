@@ -193,11 +193,12 @@ function ProjectDetailsPage() {
                 onTaskCreated={fetchTasks}
               />
             )}
-
+            {project.role === "LEAD" && (
             <Button variant="outline">
               <UserPlus className="w-4 h-4 mr-2" />
               Invite Member
             </Button>
+            )}
           </div>
         </CardHeader>
       </Card>
