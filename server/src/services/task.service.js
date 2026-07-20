@@ -191,6 +191,7 @@ const getTaskDetailsService = async ({ userId, taskId }) => {
     createdAt: task.createdAt,
 
     project: task.project,
+    projectRole: membership.role,
 
     createdBy: task.createdBy,
 

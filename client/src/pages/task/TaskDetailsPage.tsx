@@ -7,6 +7,8 @@ import type { Task } from "../../types/task";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
+import AssignMembersDialog from "../../components/task/AssignMembersDialog";
+
 
 function TaskDetailsPage() {
   const { taskId } = useParams();
@@ -48,6 +50,8 @@ function TaskDetailsPage() {
       </div>
     );
   }
+
+  const { projectRole } = task;
 
   return (
     <div className="mx-auto w-full max-w-6xl px-6 py-10 space-y-8">
@@ -138,9 +142,14 @@ function TaskDetailsPage() {
         </CardHeader>
 
         <CardContent className="flex gap-3">
-          <Button>
-            Assign Members
-          </Button>
+           (
+            <AssignMembersDialog
+              taskId={task.id}
+              projectId={task.project.id}
+              onAssigned={fetchTask}
+            />
+          )
+          
 
           <Button variant="outline">
             Edit Task
