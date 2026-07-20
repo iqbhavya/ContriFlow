@@ -49,7 +49,11 @@ function AppRouter() {
 
         <Route
           path="/tasks/:taskId"
-          element={<TaskDetailsPage />}
+          element={
+            <ProtectedRoute>
+              <TaskDetailsPage />
+            </ProtectedRoute>
+          }
         />
 
         <Route

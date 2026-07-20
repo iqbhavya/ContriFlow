@@ -24,6 +24,8 @@ import {
   Plus,
 } from "lucide-react";
 
+import { useNavigate } from "react-router-dom";
+
 import CreateTaskDialog from "../../components/task/CreateTaskDialog";
 import { getProjectTasks } from "../../services/task.service";
 import type { Task } from "../../types/task";
@@ -38,6 +40,8 @@ function ProjectDetailsPage() {
   const [error, setError] = useState<string | null>(null);
 
   const [tasks, setTasks] = useState<Task[]>([]);
+
+  const navigate = useNavigate();
 
   const fetchProject = async () => {
     try {
@@ -270,7 +274,10 @@ function ProjectDetailsPage() {
                       )}
 
                       <div className="flex justify-end">
-                        <Button variant="outline">
+                        <Button 
+                          variant="outline"
+                          onClick={()=> navigate(`/tasks/${task.id}`)}  
+                        >
                           View Details
                         </Button>
                       </div>
