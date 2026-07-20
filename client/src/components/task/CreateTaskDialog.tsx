@@ -36,6 +36,8 @@ function CreateTaskDialog({ projectId, onTaskCreated }: CreateTaskDialogProps){
 
     const [open, setOpen] = useState(false);
     const onSubmit = async (data: CreateTaskForm) => {
+
+      console.log(data);
         try {
           await createTask({
             ...data,
@@ -61,7 +63,15 @@ function CreateTaskDialog({ projectId, onTaskCreated }: CreateTaskDialogProps){
         <DialogHeader>
           <DialogTitle>Create Task</DialogTitle>
         </DialogHeader>
-        <form className="space-y-4" onSubmit={form.handleSubmit(onSubmit)}>
+        <form
+  className="space-y-4"
+  onSubmit={form.handleSubmit(
+    onSubmit,
+    (errors) => {
+      console.log("Validation errors:", errors);
+    }
+  )}
+>
           <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="title">Task Title</Label>

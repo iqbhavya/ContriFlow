@@ -59,6 +59,7 @@ function ProjectDetailsPage() {
   };
 
   const fetchTasks = async () => {
+    console.log("Fetching tasks...");
     try {
       if (!projectId) return;
 
@@ -74,6 +75,7 @@ function ProjectDetailsPage() {
   useEffect(() => {
 
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchProject();
     fetchTasks();
   }, [projectId]);
@@ -171,7 +173,7 @@ function ProjectDetailsPage() {
           <div className="flex flex-wrap gap-3">
             <CreateTaskDialog
               projectId={project.id}
-              onTaskCreated={() => { }}
+              onTaskCreated={fetchTasks}
             />
 
             <Button variant="outline">
