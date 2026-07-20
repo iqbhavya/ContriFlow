@@ -71,10 +71,7 @@ function ProjectDetailsPage() {
     }
   };
 
-
   useEffect(() => {
-
-
     // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchProject();
     fetchTasks();
@@ -91,8 +88,6 @@ function ProjectDetailsPage() {
   if (!project) {
     return <h2>Project not found.</h2>;
   }
-
-
 
   return (
     <div className="max-w-6xl mx-auto px-6 py-8 space-y-6">
@@ -171,10 +166,12 @@ function ProjectDetailsPage() {
           )}
 
           <div className="flex flex-wrap gap-3">
-            <CreateTaskDialog
-              projectId={project.id}
-              onTaskCreated={fetchTasks}
-            />
+            {project.role === "LEAD" && (
+              <CreateTaskDialog
+                projectId={project.id}
+                onTaskCreated={fetchTasks}
+              />
+            )}
 
             <Button variant="outline">
               <UserPlus className="w-4 h-4 mr-2" />
@@ -197,18 +194,18 @@ function ProjectDetailsPage() {
               <div className="border rounded-xl py-12 text-center">
                 <ClipboardList className="mx-auto w-10 h-10 mb-3 text-muted-foreground" />
 
-                <h3 className="font-semibold text-lg">
-                  No tasks yet
-                </h3>
+                <h3 className="font-semibold text-lg">No tasks yet</h3>
 
                 <p className="text-muted-foreground mt-2">
                   Create your first task to start collaborating.
                 </p>
 
-                <CreateTaskDialog
-                  projectId={project.id}
-                  onTaskCreated={fetchTasks}
-                />
+                {project.role === "LEAD" && (
+                  <CreateTaskDialog
+                    projectId={project.id}
+                    onTaskCreated={fetchTasks}
+                  />
+                )}
               </div>
             ) : (
               <div className="space-y-4">
@@ -243,7 +240,8 @@ function ProjectDetailsPage() {
                     <CardContent className="space-y-4">
                       <div className="text-sm text-muted-foreground">
                         <p>
-                          Created by <span className="font-medium text-foreground">
+                          Created by{" "}
+                          <span className="font-medium text-foreground">
                             {task.createdBy.name}
                           </span>
                         </p>
@@ -251,16 +249,11 @@ function ProjectDetailsPage() {
 
                       {task.assignees.length > 0 && (
                         <div>
-                          <p className="text-sm font-medium mb-2">
-                            Assignees
-                          </p>
+                          <p className="text-sm font-medium mb-2">Assignees</p>
 
                           <div className="flex flex-wrap gap-2">
                             {task.assignees.map((member) => (
-                              <Badge
-                                key={member.id}
-                                variant="secondary"
-                              >
+                              <Badge key={member.id} variant="secondary">
                                 {member.name}
                               </Badge>
                             ))}
@@ -270,15 +263,14 @@ function ProjectDetailsPage() {
 
                       {task.deadline && (
                         <p className="text-sm text-muted-foreground">
-                          📅 Due:{" "}
-                          {new Date(task.deadline).toLocaleDateString()}
+                          📅 Due: {new Date(task.deadline).toLocaleDateString()}
                         </p>
                       )}
 
                       <div className="flex justify-end">
-                        <Button 
+                        <Button
                           variant="outline"
-                          onClick={()=> navigate(`/tasks/${task.id}`)}  
+                          onClick={() => navigate(`/tasks/${task.id}`)}
                         >
                           View Details
                         </Button>
