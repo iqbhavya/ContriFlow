@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
-import { getTask, updateTask } from "../../services/task.service";
+import { getTask, updateTask, deleteTask } from "../../services/task.service";
+import EditTaskDialog from "../../components/task/EditTaskDialog";
 import type { Task } from "../../types/task";
 
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
@@ -47,6 +48,26 @@ function TaskDetailsPage() {
       toast.error("Failed to update task status");
     } finally {
       setUpdatingStatus(false);
+    }
+  };
+
+  const handleDeleteTask = async () => {
+    if (!window.confirm("Are you sure you want to delete this task?")) {
+      return;
+    }
+
+    try {
+      if (!taskId) return;
+      await deleteTask(Number(taskId));
+      toast.success("Task deleted successfully!");
+      if (task) {
+        navigate(`/projects/${task.project.id}`);
+      } else {
+        navigate(-1);
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to delete task");
     }
   };
 
@@ -185,22 +206,22 @@ function TaskDetailsPage() {
 
         <CardContent className="flex gap-3">
            {task.role === "LEAD" && (
-                <AssignMembersDialog
-                    taskId={task.id}
-                    projectId={task.project.id}
-                    assignedMemberIds={task.assignees.map((member) => member.id)}
-                    onAssigned={fetchTask}
-                />
-            )}
-          
-
-          <Button variant="outline">
-            Edit Task
-          </Button>
-
-          <Button variant="destructive">
-            Delete Task
-          </Button>
+             <>
+               <AssignMembersDialog
+                 taskId={task.id}
+                 projectId={task.project.id}
+                 assignedMemberIds={task.assignees.map((member) => member.id)}
+                 onAssigned={fetchTask}
+               />
+               <EditTaskDialog
+                 task={task}
+                 onTaskUpdated={fetchTask}
+               />
+               <Button variant="destructive" onClick={handleDeleteTask}>
+                 Delete Task
+               </Button>
+             </>
+           )}
         </CardContent>
       </Card>
     </div>
