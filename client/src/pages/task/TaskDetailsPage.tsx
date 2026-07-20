@@ -51,8 +51,8 @@ function TaskDetailsPage() {
     );
   }
 
-  const { projectRole } = task;
-
+  
+  console.log(task);
   return (
     <div className="mx-auto w-full max-w-6xl px-6 py-10 space-y-8">
       <Button
@@ -142,13 +142,14 @@ function TaskDetailsPage() {
         </CardHeader>
 
         <CardContent className="flex gap-3">
-           (
-            <AssignMembersDialog
-              taskId={task.id}
-              projectId={task.project.id}
-              onAssigned={fetchTask}
-            />
-          )
+           {task.role === "LEAD" && (
+                <AssignMembersDialog
+                    taskId={task.id}
+                    projectId={task.project.id}
+                    assignedMemberIds={task.assignees.map((member) => member.id)}
+                    onAssigned={fetchTask}
+                />
+            )}
           
 
           <Button variant="outline">

@@ -22,14 +22,16 @@ type ProjectMember = {
 };
 
 type AssignMembersDialogProps = {
-  taskId: number;
-  projectId: number;
-  onAssigned: () => void;
+    taskId: number;
+    projectId: number;
+    assignedMemberIds: number[];
+    onAssigned: () => void;
 };
 
 export default function AssignMembersDialog({
   taskId,
   projectId,
+  assignedMemberIds,
   onAssigned,
 }: AssignMembersDialogProps) {
   const [open, setOpen] = useState(false);
@@ -45,8 +47,12 @@ export default function AssignMembersDialog({
       setLoading(true);
 
       const data = await getProjectMembers(projectId);
-      console.log("Project Members:", data);
-      setMembers(data);
+      
+      const availableMembers = data.filter(
+            (member: ProjectMember) =>
+                !assignedMemberIds.includes(member.id)
+    );
+      setMembers(availableMembers);
     } catch (error) {
       console.error(error);
     } finally {

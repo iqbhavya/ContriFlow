@@ -12,7 +12,7 @@ export type Task = {
         name: string;
     };
 
-  projectRole: "LEAD" | "MEMBER";
+  role: "LEAD" | "MEMBER";
 
   createdBy: {
     id: number;

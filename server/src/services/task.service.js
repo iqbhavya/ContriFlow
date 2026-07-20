@@ -174,7 +174,14 @@ const getTaskDetailsService = async ({ userId, taskId }) => {
     throw error;
   }
 
-  const membership = await requireProjectMember(userId, task.project.id);
+  const membership = await prisma.projectMember.findUnique({
+    where: {
+      userId_projectId: {
+        userId,
+        projectId: task.project.id,
+      },
+    },
+  });
 
   if (!membership) {
     const error = new Error("You are not a member of this project");
@@ -191,7 +198,7 @@ const getTaskDetailsService = async ({ userId, taskId }) => {
     createdAt: task.createdAt,
 
     project: task.project,
-    projectRole: membership.role,
+    role: membership.role,
 
     createdBy: task.createdBy,
 
