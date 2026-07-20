@@ -353,7 +353,87 @@ const getProjectTasks = async (req,res) => {
   }
 }
 
+const updateProject = async (req, res) => {
+  try {
+    const projectId = Number(req.params.projectId);
 
+    if (Number.isNaN(projectId)) {
+      return res.status(400).json({
+        message: "Invalid project ID",
+      });
+    }
+
+    const { name, description } = req.body;
+
+    if (name === undefined && description === undefined) {
+      return res.status(400).json({
+        message: "No fields provided to update",
+      });
+    }
+
+    // Check project exists
+    const project = await prisma.project.findUnique({
+      where: { id: projectId },
+    });
+
+    if (!project) {
+      return res.status(404).json({
+        message: "Project not found",
+      });
+    }
+
+    // Check project lead role
+    const projectMembership = await requireProjectLead(req.user.userId, projectId);
+
+    if (projectMembership === null) {
+      return res.status(403).json({
+        message: "You are not a member of this project",
+      });
+    }
+
+    if (projectMembership === false) {
+      return res.status(403).json({
+        message: "Only project leads can edit projects",
+      });
+    }
+
+    const updateData = {};
+    if (name !== undefined) {
+      if (typeof name !== "string" || !name.trim()) {
+        return res.status(400).json({
+          message: "Project name cannot be empty",
+        });
+      }
+      updateData.name = name.trim();
+    }
+
+    if (description !== undefined) {
+      if (typeof description !== "string" || !description.trim()) {
+        return res.status(400).json({
+          message: "Description cannot be empty",
+        });
+      }
+      updateData.description = description.trim();
+    }
+
+    const updatedProject = await prisma.project.update({
+      where: {
+        id: projectId,
+      },
+      data: updateData,
+    });
+
+    return res.status(200).json({
+      message: "Project updated successfully",
+      project: updatedProject,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      message: "Internal Server Error",
+    });
+  }
+};
 
 module.exports = {
   createProject,
@@ -361,4 +441,5 @@ module.exports = {
   getProjectDetails,
   joinProject,
   getProjectTasks,
+  updateProject,
 };

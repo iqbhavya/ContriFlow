@@ -8,7 +8,8 @@ const {
     getMyProjects,
     getProjectDetails,
     joinProject,
-    getProjectTasks
+    getProjectTasks,
+    updateProject
  } = require("../controllers/project.controller");
 
 router.post("/", auth, createProject);
@@ -16,6 +17,7 @@ router.get("/",auth,getMyProjects);
 router.get("/:projectId/tasks", auth, getProjectTasks);
 router.get("/:projectId", auth, getProjectDetails);
 router.post("/join", auth, joinProject);
+router.patch("/:projectId", auth, updateProject);
 
 
 

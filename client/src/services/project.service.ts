@@ -21,3 +21,8 @@ export const getProjectMembers = async (projectId: number) => {
   const response = await api.get(`/projects/${projectId}/members`);
   return response.data.members;
 };
+
+export const updateProject = async (projectId: number, data: { name?: string; description?: string }) => {
+  const response = await api.patch(`/projects/${projectId}`, data);
+  return response.data;
+};

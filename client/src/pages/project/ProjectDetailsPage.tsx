@@ -27,6 +27,7 @@ import {
 import { useNavigate } from "react-router-dom";
 
 import CreateTaskDialog from "../../components/task/CreateTaskDialog";
+import EditProjectDialog from "../../components/project/EditProjectDialog";
 import { getProjectTasks } from "../../services/task.service";
 import type { Task } from "../../types/task";
 import { toast } from "sonner";
@@ -188,10 +189,16 @@ function ProjectDetailsPage() {
 
           <div className="flex flex-wrap gap-3">
             {project.role === "LEAD" && (
-              <CreateTaskDialog
-                projectId={project.id}
-                onTaskCreated={fetchTasks}
-              />
+              <>
+                <CreateTaskDialog
+                  projectId={project.id}
+                  onTaskCreated={fetchTasks}
+                />
+                <EditProjectDialog
+                  project={project}
+                  onProjectUpdated={fetchProject}
+                />
+              </>
             )}
             {project.role === "LEAD" && (
             <Button variant="outline">
