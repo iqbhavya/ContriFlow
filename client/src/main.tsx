@@ -6,12 +6,14 @@ import App from "./App";
 import queryClient from "./lib/queryClient";
 import "./index.css";
 import { AuthProvider } from "./context/AuthContext";
+import { Toaster } from "sonner";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <App />
+        <Toaster richColors position="top-right" />
       </AuthProvider>
     </QueryClientProvider>
   </React.StrictMode>

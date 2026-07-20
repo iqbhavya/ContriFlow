@@ -22,6 +22,7 @@ import {
 } from "../../lib/validations/task.schema";
 
 import {createTask} from "../../services/task.service";
+import { toast } from "sonner";
 
 
 type CreateTaskDialogProps = {
@@ -43,6 +44,7 @@ function CreateTaskDialog({ projectId, onTaskCreated }: CreateTaskDialogProps){
             ...data,
             projectId,
           });
+          toast.success("Task created successfully!");
     
           form.reset();
           setOpen(false);
@@ -50,6 +52,7 @@ function CreateTaskDialog({ projectId, onTaskCreated }: CreateTaskDialogProps){
           onTaskCreated();
         } catch (error) {
           console.error(error);
+          toast.error("Failed to create task");
         }
       };
       

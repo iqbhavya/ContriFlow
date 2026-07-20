@@ -21,7 +21,7 @@ import {
   ClipboardList,
   FolderKanban,
   UserPlus,
-  Plus,
+  Copy,
 } from "lucide-react";
 
 import { useNavigate } from "react-router-dom";
@@ -29,6 +29,7 @@ import { useNavigate } from "react-router-dom";
 import CreateTaskDialog from "../../components/task/CreateTaskDialog";
 import { getProjectTasks } from "../../services/task.service";
 import type { Task } from "../../types/task";
+import { toast } from "sonner";
 
 function ProjectDetailsPage() {
   const { projectId } = useParams();
@@ -42,6 +43,16 @@ function ProjectDetailsPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
 
   const navigate = useNavigate();
+
+  const handleCopyInviteCode = async (code: string) => {
+    try {
+      await navigator.clipboard.writeText(code);
+      toast.success("Invite code copied to clipboard!");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to copy invite code");
+    }
+  };
 
   const fetchProject = async () => {
     try {
@@ -157,10 +168,20 @@ function ProjectDetailsPage() {
 
           {project.inviteCode && (
             <Card>
-              <CardContent className="p-5">
-                <p className="text-sm text-muted-foreground">Invite Code</p>
+              <CardContent className="p-5 flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Invite Code</p>
 
-                <p className="font-mono text-lg mt-2">{project.inviteCode}</p>
+                  <p className="font-mono text-lg mt-2">{project.inviteCode}</p>
+                </div>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => handleCopyInviteCode(project.inviteCode!)}
+                  title="Copy Invite Code"
+                >
+                  <Copy className="w-4 h-4" />
+                </Button>
               </CardContent>
             </Card>
           )}

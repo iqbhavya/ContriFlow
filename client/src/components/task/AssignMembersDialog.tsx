@@ -12,8 +12,8 @@ import {
 import { Button } from "../../components/ui/button";
 import { Checkbox } from "../../components/ui/checkbox";
 
-import { assignTask, getProjectMembers } from "@/services/task.service";
-
+import { assignTask, getProjectMembers } from "../../services/task.service";
+import { toast } from "sonner";
 type ProjectMember = {
   id: number;
   name: string;
@@ -55,6 +55,7 @@ export default function AssignMembersDialog({
       setMembers(availableMembers);
     } catch (error) {
       console.error(error);
+      toast.error("Failed to load project members");
     } finally {
       setLoading(false);
     }
@@ -79,13 +80,14 @@ export default function AssignMembersDialog({
       setAssigning(true);
 
       await assignTask(taskId, selectedMembers);
-
+      toast.success("Members assigned successfully");
       setSelectedMembers([]);
       setOpen(false);
 
       onAssigned();
     } catch (error) {
       console.error(error);
+      toast.error("Failed to assign members");
     } finally {
       setAssigning(false);
     }
@@ -121,9 +123,9 @@ export default function AssignMembersDialog({
               Loading members...
             </p>
           ) : members.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              No members found.
-            </p>
+             <p className="text-center text-sm text-muted-foreground py-6">
+                  All project members have already been assigned to this task.
+             </p>
           ) : (
             members.map((member) => (
               <div

@@ -22,6 +22,7 @@ import {
 } from "../../lib/validations/project.schema";
 
 import { createProject } from "../../services/project.service";
+import { toast } from "sonner";
 
 
 
@@ -38,6 +39,7 @@ function CreateProjectDialog({ onProjectCreated }: CreateProjectDialogProps) {
   const onSubmit = async (data: CreateProjectForm) => {
     try {
       await createProject(data);
+      toast.success("Project created successfully!");
 
       form.reset();
       setOpen(false);
@@ -45,6 +47,7 @@ function CreateProjectDialog({ onProjectCreated }: CreateProjectDialogProps) {
       onProjectCreated();
     } catch (error) {
       console.error(error);
+      toast.error("Failed to create project");
     }
   };
   return (

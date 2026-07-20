@@ -12,7 +12,7 @@ export const createProject = async (data: CreateProjectForm) => {
   return response.data;
 };
 
-export const getProject = async (projectId: number) => {
+export const getProject = async (projectId: string) => {
   const response = await api.get(`/projects/${projectId}`);
   return response.data;
 }

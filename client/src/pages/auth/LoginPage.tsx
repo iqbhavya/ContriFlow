@@ -46,6 +46,7 @@ function LoginPage() {
       );
 
       saveToken(response.token);
+      toast.success("Welcome back! Logged in successfully.");
 
       navigate("/projects");
 
