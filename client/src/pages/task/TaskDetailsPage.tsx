@@ -8,6 +8,7 @@ import type { Task } from "../../types/task";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
+import { Input } from "../../components/ui/input";
 import AssignMembersDialog from "../../components/task/AssignMembersDialog";
 import { toast } from "sonner";
 import { Trash2 } from "lucide-react";
@@ -40,8 +41,16 @@ function TaskDetailsPage() {
   const [status, setStatus] = useState<"TODO" | "IN_PROGRESS" | "DONE" >("TODO");
   const [updatingStatus, setUpdatingStatus] = useState(false);
   const [contributions, setContributions] = useState<Contribution[]>([]);
+  const [contributionSearchQuery, setContributionSearchQuery] = useState("");
 
   const currentUserId = getUserIdFromToken();
+
+  const filteredContributions = contributions.filter(
+    (contribution) =>
+      contribution.title.toLowerCase().includes(contributionSearchQuery.toLowerCase()) ||
+      (contribution.description &&
+        contribution.description.toLowerCase().includes(contributionSearchQuery.toLowerCase()))
+  );
 
   const fetchTask = async () => {
     try {
@@ -318,16 +327,32 @@ function TaskDetailsPage() {
 
       {/* Contributions Section */}
       <div className="space-y-4">
-        <h2 className="text-2xl font-bold">Contributions</h2>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <h2 className="text-2xl font-bold">Contributions</h2>
+          {contributions.length > 5 && (
+            <Input
+              type="search"
+              placeholder="Search contributions..."
+              value={contributionSearchQuery}
+              onChange={(e) => setContributionSearchQuery(e.target.value)}
+              className="w-full max-w-xs bg-transparent"
+            />
+          )}
+        </div>
+
         {contributions.length === 0 ? (
           <Card>
             <CardContent className="py-8 text-center text-muted-foreground">
               No contributions submitted yet.
             </CardContent>
           </Card>
+        ) : filteredContributions.length === 0 ? (
+          <Card className="border border-dashed p-8 text-center text-muted-foreground bg-muted/10">
+            No contributions match your search query.
+          </Card>
         ) : (
           <div className="grid gap-4">
-            {contributions.map((contribution) => {
+            {filteredContributions.map((contribution) => {
               let badgeVariant: "outline" | "default" | "destructive" = "outline";
               let badgeClass = "";
               if (contribution.status === "APPROVED") {

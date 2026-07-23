@@ -3,6 +3,8 @@ import { Link, useParams } from "react-router-dom";
 
 import { getProject } from "../../services/project.service";
 import type { ProjectDetails } from "../../types/project";
+import { Input } from "../../components/ui/input";
+
 
 import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
@@ -42,8 +44,16 @@ function ProjectDetailsPage() {
   const [error, setError] = useState<string | null>(null);
 
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [taskSearchQuery, setTaskSearchQuery] = useState("");
 
   const navigate = useNavigate();
+
+  const filteredTasks = tasks.filter(
+    (task) =>
+      task.title.toLowerCase().includes(taskSearchQuery.toLowerCase()) ||
+      (task.description &&
+        task.description.toLowerCase().includes(taskSearchQuery.toLowerCase()))
+  );
 
   const handleCopyInviteCode = async (code: string) => {
     try {
@@ -219,6 +229,18 @@ function ProjectDetailsPage() {
           </CardHeader>
 
           <CardContent>
+            {tasks.length > 5 && (
+              <div className="mb-6">
+                <Input
+                  type="search"
+                  placeholder="Search tasks..."
+                  value={taskSearchQuery}
+                  onChange={(e) => setTaskSearchQuery(e.target.value)}
+                  className="w-full max-w-sm bg-transparent"
+                />
+              </div>
+            )}
+
             {tasks.length === 0 ? (
               <div className="border rounded-xl py-12 text-center">
                 <ClipboardList className="mx-auto w-10 h-10 mb-3 text-muted-foreground" />
@@ -236,9 +258,13 @@ function ProjectDetailsPage() {
                   />
                 )}
               </div>
+            ) : filteredTasks.length === 0 ? (
+              <div className="border border-dashed rounded-xl py-12 text-center text-muted-foreground bg-muted/10">
+                No tasks match your search query.
+              </div>
             ) : (
               <div className="space-y-4">
-                {tasks.map((task) => (
+                {filteredTasks.map((task) => (
                   <Card key={task.id}>
                     <CardHeader>
                       <div className="flex items-start justify-between">
