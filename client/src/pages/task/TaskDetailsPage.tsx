@@ -11,6 +11,23 @@ import { Button } from "../../components/ui/button";
 import AssignMembersDialog from "../../components/task/AssignMembersDialog";
 import { toast } from "sonner";
 
+import type { Contribution } from "../../types/contribution";
+import { getTaskContributions, reviewContribution } from "../../services/contribution.service";
+import SubmitContributionDialog from "../../components/contribution/SubmitContributionDialog";
+
+// Local JWT decoder helper
+const getUserIdFromToken = () => {
+  const token = localStorage.getItem("token");
+  if (!token) return null;
+  try {
+    const payload = token.split(".")[1];
+    const decoded = JSON.parse(atob(payload));
+    return decoded.userId as number;
+  } catch {
+    return null;
+  }
+};
+
 
 function TaskDetailsPage() {
   const { taskId } = useParams();
@@ -20,6 +37,9 @@ function TaskDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState<"TODO" | "IN_PROGRESS" | "DONE" >("TODO");
   const [updatingStatus, setUpdatingStatus] = useState(false);
+  const [contributions, setContributions] = useState<Contribution[]>([]);
+
+  const currentUserId = getUserIdFromToken();
 
   const fetchTask = async () => {
     try {
@@ -29,10 +49,25 @@ function TaskDetailsPage() {
       console.log(data);
       setTask(data);
       setStatus(data.status);
+
+      const contributionData = await getTaskContributions(Number(taskId));
+      setContributions(contributionData.contributions || []);
     } catch (error) {
       console.error(error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleReview = async (contributionId: number, status: "APPROVED" | "REJECTED") => {
+    const feedback = window.prompt(`Enter feedback for this ${status.toLowerCase()} contribution (optional):`) ?? "";
+    try {
+      await reviewContribution(contributionId, { status, feedback });
+      toast.success(`Contribution ${status.toLowerCase()} successfully`);
+      fetchTask();
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to review contribution");
     }
   };
 
@@ -112,17 +147,28 @@ function TaskDetailsPage() {
           </p>
         </div>
 
-        <Badge
-          variant={
-            task.status === "DONE"
-              ? "default"
-              : task.status === "IN_PROGRESS"
-              ? "secondary"
-              : "outline"
-          }
-        >
-          {task.status}
-        </Badge>
+        <div className="flex flex-col items-end gap-2.5">
+          <Badge
+            variant={
+              task.status === "DONE"
+                ? "default"
+                : task.status === "IN_PROGRESS"
+                ? "secondary"
+                : "outline"
+            }
+          >
+            {task.status}
+          </Badge>
+
+          {currentUserId && task.assignees.some((member) => member.id === currentUserId) && (
+            <SubmitContributionDialog
+              taskId={task.id}
+              assignees={task.assignees}
+              currentUserId={currentUserId}
+              onContributionSubmitted={fetchTask}
+            />
+          )}
+        </div>
       </div>
 
       <Card>
@@ -198,14 +244,15 @@ function TaskDetailsPage() {
           </CardContent>
         </Card>
       )}
-
+      {task.role === "LEAD" && (
       <Card>
+
         <CardHeader>
           <CardTitle>Actions</CardTitle>
         </CardHeader>
 
         <CardContent className="flex gap-3">
-           {task.role === "LEAD" && (
+           
              <>
                <AssignMembersDialog
                  taskId={task.id}
@@ -221,11 +268,135 @@ function TaskDetailsPage() {
                  Delete Task
                </Button>
              </>
-           )}
+           
         </CardContent>
       </Card>
+      )}
+
+      {/* Contributions Section */}
+      <div className="space-y-4">
+        <h2 className="text-2xl font-bold">Contributions</h2>
+        {contributions.length === 0 ? (
+          <Card>
+            <CardContent className="py-8 text-center text-muted-foreground">
+              No contributions submitted yet.
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid gap-4">
+            {contributions.map((contribution) => {
+              let badgeVariant: "outline" | "default" | "destructive" = "outline";
+              let badgeClass = "";
+              if (contribution.status === "APPROVED") {
+                badgeVariant = "default";
+                badgeClass = "bg-green-600 hover:bg-green-600/80 text-white border-transparent";
+              } else if (contribution.status === "REJECTED") {
+                badgeVariant = "destructive";
+              } else {
+                badgeClass = "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20";
+              }
+
+              return (
+                <Card key={contribution.id} className="relative overflow-hidden">
+                  <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
+                    <div className="space-y-1">
+                      <CardTitle className="text-lg font-bold">
+                        {contribution.title || "Contribution"}
+                      </CardTitle>
+                      <p className="text-xs text-muted-foreground">
+                        Submitted on {new Date(contribution.createdAt).toLocaleDateString()} by{" "}
+                        <span className="font-semibold text-foreground">
+                          {contribution.submittedBy.name}
+                        </span>
+                      </p>
+                    </div>
+                    <Badge variant={badgeVariant} className={badgeClass}>
+                      {contribution.status}
+                    </Badge>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div>
+                      <p className="text-sm font-semibold text-muted-foreground mb-1">Description</p>
+                      <p className="text-sm whitespace-pre-wrap leading-relaxed">
+                        {contribution.description || "No description provided."}
+                      </p>
+                    </div>
+
+                    <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm pt-1 border-t border-border/50">
+                      <div>
+                        <span className="text-muted-foreground">GitHub Link: </span>
+                        {contribution.proofUrl ? (
+                          <a
+                            href={contribution.proofUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-primary hover:underline font-medium inline-flex items-center gap-1"
+                          >
+                            View Link ↗
+                          </a>
+                        ) : (
+                          <span className="text-muted-foreground italic">None</span>
+                        )}
+                      </div>
+
+                      <div>
+                        <span className="text-muted-foreground">Attachment: </span>
+                        <span className="text-muted-foreground italic text-xs">None</span>
+                      </div>
+                    </div>
+
+                    <div>
+                      <p className="text-sm font-semibold text-muted-foreground mb-1">Contributors</p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {contribution.contributors.map((member) => (
+                          <Badge key={member.id} variant="secondary" className="text-xs font-normal">
+                            {member.name}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Reviewer Feedback if reviewed */}
+                    {contribution.status !== "PENDING" && (
+                      <div className="rounded-lg bg-muted/40 p-3 border border-border/50 text-sm space-y-1">
+                        <p className="font-medium text-xs text-muted-foreground">
+                          Reviewed by {contribution.reviewedBy?.name || "Project Lead"}
+                        </p>
+                        {contribution.feedback && (
+                          <p className="text-foreground italic">"{contribution.feedback}"</p>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Approve/Reject actions for project lead */}
+                    {task.role === "LEAD" && contribution.status === "PENDING" && (
+                      <div className="flex gap-2 pt-2">
+                        <Button
+                          size="sm"
+                          className="bg-green-600 hover:bg-green-700 text-white"
+                          onClick={() => handleReview(contribution.id, "APPROVED")}
+                        >
+                          Approve
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => handleReview(contribution.id, "REJECTED")}
+                        >
+                          Reject
+                        </Button>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
+
 
 export default TaskDetailsPage;

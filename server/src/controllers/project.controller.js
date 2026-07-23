@@ -1,6 +1,6 @@
 const prisma = require("../lib/prisma");
 const { requireProjectMember,
-  requireProjectLead 
+  requireProjectLead
 } = require("../utils/projectAuth");
 
 
@@ -86,8 +86,8 @@ const getProjectDetails = async (req, res) => {
     }
 
     const projectMembership = await requireProjectMember(
-        req.user.userId,
-        projectId
+      req.user.userId,
+      projectId
     );
 
     if (!projectMembership) {
@@ -161,7 +161,7 @@ const getProjectDetails = async (req, res) => {
       },
     };
 
-    if(projectMembership.role === "LEAD") {
+    if (projectMembership.role === "LEAD") {
       formattedProject.inviteCode = project.inviteCode;
     }
 
@@ -191,7 +191,7 @@ const joinProject = async (req, res) => {
       },
     });
 
-    
+
 
     if (!project) {
       return res.status(404).json({
@@ -240,13 +240,13 @@ const joinProject = async (req, res) => {
   }
 };
 
-const getProjectTasks = async (req,res) => {
+const getProjectTasks = async (req, res) => {
 
   try {
 
-    const  projectId  = Number(req.params.projectId);
+    const projectId = Number(req.params.projectId);
 
-    if(Number.isNaN(projectId)){
+    if (Number.isNaN(projectId)) {
       return res.status(500).json({
         message: "Invalid project ID",
       });
@@ -268,15 +268,15 @@ const getProjectTasks = async (req,res) => {
       },
     })
 
-    if(!project){
+    if (!project) {
       return res.status(404).json({
         message: "Project not found",
       });
     }
 
     const projectMembership = await requireProjectMember(
-        req.user.userId,
-        projectId
+      req.user.userId,
+      projectId
     );
 
     if (!projectMembership) {
@@ -284,29 +284,29 @@ const getProjectTasks = async (req,res) => {
         message: "You are not a member of this project",
       });
     }
-    
+
     const projectTask = await prisma.task.findMany({
-      where : {
-        projectId : projectId, 
+      where: {
+        projectId: projectId,
       },
 
       include: {
         createdBy: {
-            select: {
-                id: true,
-                name: true,
-            },
+          select: {
+            id: true,
+            name: true,
+          },
         },
 
         members: {
-            include: {
-                user: {
-                    select: {
-                        id: true,
-                        name: true,
-                    },
-                },
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+              },
             },
+          },
         },
       },
       orderBy: {
@@ -344,7 +344,7 @@ const getProjectTasks = async (req,res) => {
       tasks: formattedTasks,
     });
 
-  } catch(error) {
+  } catch (error) {
     console.error(error);
 
     res.status(500).json({
