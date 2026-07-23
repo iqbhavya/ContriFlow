@@ -26,3 +26,8 @@ export const updateProject = async (projectId: number, data: { name?: string; de
   const response = await api.patch(`/projects/${projectId}`, data);
   return response.data;
 };
+
+export const joinProject = async (inviteCode: string) => {
+  const response = await api.post("/projects/join", { inviteCode });
+  return response.data;
+};

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { getMyProjects } from "../../services/project.service";
 import CreateProjectDialog from "../../components/project/CreateProjectDialog";
+import JoinProjectDialog from "../../components/project/JoinProjectDialog";
 
 import { Button } from "../../components/ui/button";
 import {
@@ -56,9 +57,22 @@ function ProjectsPage() {
 
   if (projects.length === 0) {
     return (
-      <div>
-        <h2>No projects yet</h2>
-        <p>Create a project or join one using an invite code.</p>
+      <div className="min-h-[85vh] flex items-center justify-center p-6">
+        <Card className="w-full max-w-lg border border-border/80 shadow-md">
+          <CardHeader className="text-center pb-2">
+            <div className="mx-auto w-12 h-12 rounded-full bg-primary/5 flex items-center justify-center text-xl mb-4 border border-primary/10">
+              📁
+            </div>
+            <CardTitle className="text-2xl font-bold tracking-tight">No Projects Yet</CardTitle>
+            <CardDescription className="text-base mt-2 text-muted-foreground max-w-sm mx-auto leading-relaxed">
+              Create a new project or join an existing one using an invite code to start tracking contributions.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-col sm:flex-row justify-center gap-3 pt-6 border-t border-border/50">
+            <CreateProjectDialog onProjectCreated={fetchProjects} />
+            <JoinProjectDialog onProjectJoined={fetchProjects} />
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -70,7 +84,7 @@ function ProjectsPage() {
 
         <div className="flex gap-3">
           <CreateProjectDialog onProjectCreated={fetchProjects} />
-          <Button variant="outline">Join Project</Button>
+          <JoinProjectDialog onProjectJoined={fetchProjects} />
         </div>
       </div>
 

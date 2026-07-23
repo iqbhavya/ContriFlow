@@ -73,7 +73,9 @@ function TaskDetailsPage() {
     }
   };
 
-  const handleDeleteContribution = async (contributionId: number) => {
+  const handleDeleteContribution = async (e: React.MouseEvent, contributionId: number) => {
+    e.preventDefault();
+    e.stopPropagation();
     if (!window.confirm("Are you sure you want to delete this contribution?")) {
       return;
     }
@@ -359,7 +361,7 @@ function TaskDetailsPage() {
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => handleDeleteContribution(contribution.id)}
+                          onClick={(e) => handleDeleteContribution(e, contribution.id)}
                           className="h-7 w-7 text-destructive hover:bg-destructive/10 cursor-pointer"
                           title="Delete contribution"
                         >

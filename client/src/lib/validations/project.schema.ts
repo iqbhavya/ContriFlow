@@ -14,4 +14,13 @@ export const createProjectSchema = z.object({
     .max(100, "Description cannot exceed 100 characters."),
 });
 
+export const joinProjectSchema = z.object({
+  inviteCode: z
+    .string()
+    .trim()
+    .min(1, "Invite code is required.")
+    .max(20, "Invite code cannot exceed 20 characters."),
+});
+
 export type CreateProjectForm = z.infer<typeof createProjectSchema>;
+export type JoinProjectForm = z.infer<typeof joinProjectSchema>;
