@@ -421,7 +421,12 @@ function ProjectDetailsPage() {
                   key={member.id}
                   className="flex justify-between items-center border rounded-lg p-3"
                 >
-                  <span>{member.name}</span>
+                  <Link
+                    to={`/profile/${member.id}`}
+                    className="cursor-pointer hover:underline text-sm font-medium hover:text-primary transition-colors"
+                  >
+                    {member.name}
+                  </Link>
 
                   <Badge
                     variant={member.role === "LEAD" ? "default" : "secondary"}

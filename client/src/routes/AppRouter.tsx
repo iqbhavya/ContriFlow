@@ -11,6 +11,7 @@ import ProjectsPage from "../pages/project/ProjectsPage";
 import ProjectDetailsPage from "../pages/project/ProjectDetailsPage";
 import TaskDetailsPage from "../pages/task/TaskDetailsPage";
 import ContributionPage from "../pages/contribution/ContributionPage";
+import ProfilePage from "../pages/profile/ProfilePage";
 import ProtectedRoute from "./ProtectedRoute";
 
 
@@ -59,6 +60,15 @@ function AppRouter() {
         <Route
           path="/contributions/:contributionId"
           element={<ContributionPage />}
+        />
+
+        <Route
+          path="/profile/:userId"
+          element={
+            <ProtectedRoute>
+              <ProfilePage />
+            </ProtectedRoute>
+          }
         />
       </Routes>
     </BrowserRouter>

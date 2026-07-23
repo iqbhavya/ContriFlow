@@ -2,9 +2,22 @@ import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { Button } from "../ui/button";
 
+const getUserIdFromToken = () => {
+  const token = localStorage.getItem("token");
+  if (!token) return null;
+  try {
+    const payload = token.split(".")[1];
+    const decoded = JSON.parse(atob(payload));
+    return decoded.userId as number;
+  } catch {
+    return null;
+  }
+};
+
 function AppLayout({ children }: { children: React.ReactNode }) {
   const { logout } = useAuth();
   const navigate = useNavigate();
+  const currentUserId = getUserIdFromToken();
 
   const handleLogout = () => {
     logout();
@@ -27,6 +40,15 @@ function AppLayout({ children }: { children: React.ReactNode }) {
             </nav>
           </div>
           <div className="flex items-center gap-4">
+            {currentUserId && (
+              <Link
+                to={`/profile/${currentUserId}`}
+                className="w-8 h-8 rounded-full bg-primary/10 border border-primary/20 text-primary hover:bg-primary/20 transition-all flex items-center justify-center text-xs font-bold font-mono"
+                title="View Profile"
+              >
+                U
+              </Link>
+            )}
             <Button variant="ghost" size="sm" onClick={handleLogout} className="cursor-pointer">
               Sign Out
             </Button>

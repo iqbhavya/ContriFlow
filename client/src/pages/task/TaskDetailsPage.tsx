@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, Link } from "react-router-dom";
 
 import { getTask, updateTask, deleteTask } from "../../services/task.service";
 import EditTaskDialog from "../../components/task/EditTaskDialog";
@@ -373,9 +373,12 @@ function TaskDetailsPage() {
                       </CardTitle>
                       <p className="text-xs text-muted-foreground">
                         Submitted on {new Date(contribution.createdAt).toLocaleDateString()} by{" "}
-                        <span className="font-semibold text-foreground">
+                        <Link
+                          to={`/profile/${contribution.submittedBy.id}`}
+                          className="cursor-pointer hover:underline font-semibold text-foreground hover:text-primary transition-colors"
+                        >
                           {contribution.submittedBy.name}
-                        </span>
+                        </Link>
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
