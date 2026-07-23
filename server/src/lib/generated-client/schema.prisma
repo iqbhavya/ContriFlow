@@ -1,0 +1,160 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/lib/generated-client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ProjectRole {
+  LEAD
+  MEMBER
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  DONE
+}
+
+enum ContributionStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+
+  createdProjects Project[] @relation("CreatedProjects")
+
+  createdTasks Task[] @relation("CreatedTasks")
+
+  projectMemberships      ProjectMember[]
+  taskAssignments         TaskMember[]
+  contributionMemberships ContributionMember[]
+  submittedContributions  Contribution[]       @relation("SubmittedContributions")
+  reviewedContributions   Contribution[]       @relation("ReviewedContributions")
+  notifications           Notification[]
+}
+
+model Project {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?
+  inviteCode  String   @unique
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  createdById Int
+  createdBy   User @relation("CreatedProjects", fields: [createdById], references: [id])
+
+  members ProjectMember[]
+  tasks   Task[]
+}
+
+model ProjectMember {
+  id   Int         @id @default(autoincrement())
+  role ProjectRole @default(MEMBER)
+
+  joinedAt DateTime @default(now())
+
+  userId    Int
+  projectId Int
+
+  user    User    @relation(fields: [userId], references: [id])
+  project Project @relation(fields: [projectId], references: [id])
+
+  @@unique([userId, projectId])
+}
+
+model Task {
+  id          Int        @id @default(autoincrement())
+  title       String
+  description String?
+  deadline    DateTime?
+  status      TaskStatus @default(TODO)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  projectId Int
+  project   Project @relation(fields: [projectId], references: [id])
+
+  createdById Int
+  createdBy   User @relation("CreatedTasks", fields: [createdById], references: [id])
+
+  members       TaskMember[]
+  contributions Contribution[]
+}
+
+model TaskMember {
+  id         Int     @id @default(autoincrement())
+  roleInTask String?
+
+  assignedAt DateTime @default(now())
+
+  taskId Int
+  userId Int
+
+  task Task @relation(fields: [taskId], references: [id])
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([taskId, userId])
+}
+
+model Contribution {
+  id Int @id @default(autoincrement())
+
+  title       String
+  description String?
+
+  proofUrl String? @db.Text
+
+  status ContributionStatus @default(PENDING)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  reviewedAt DateTime?
+  feedback   String?
+
+  taskId Int
+  task   Task @relation(fields: [taskId], references: [id])
+
+  submittedById Int
+  submittedBy   User @relation("SubmittedContributions", fields: [submittedById], references: [id])
+
+  reviewedById Int?
+  reviewedBy   User? @relation("ReviewedContributions", fields: [reviewedById], references: [id])
+
+  contributors ContributionMember[]
+}
+
+model ContributionMember {
+  id Int @id @default(autoincrement())
+
+  addedAt DateTime @default(now())
+
+  contributionId Int
+  userId         Int
+
+  contribution Contribution @relation(fields: [contributionId], references: [id])
+  user         User         @relation(fields: [userId], references: [id])
+
+  @@unique([contributionId, userId])
+}
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+}

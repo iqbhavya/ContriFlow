@@ -3,6 +3,7 @@ const {
   requireProjectMember,
   requireProjectLead,
 } = require("../utils/projectAuth");
+const { createNotification, notifyProjectMembers } = require("../utils/notifications");
 
 const createTaskService = async ({ userId, title, description, projectId, deadline }) => {
   // Check project
@@ -44,6 +45,13 @@ const createTaskService = async ({ userId, title, description, projectId, deadli
       deadline: deadline ? new Date(deadline) : null,
     },
   });
+
+  const projectCreator = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { name: true }
+  });
+  const creatorName = projectCreator ? projectCreator.name : "A project lead";
+  await notifyProjectMembers(projectId, `${creatorName} created task '${task.title}' in project '${project.name}'`, userId);
 
   return task;
 };
@@ -128,6 +136,16 @@ const assignTaskService = async ({ userId, taskId, assigneeIds }) => {
       userId,
     })),
   });
+
+  const project = await prisma.project.findUnique({
+    where: { id: task.projectId },
+    select: { name: true },
+  });
+
+  const message = `You have been assigned to task '${task.title}' in project '${project ? project.name : ""}'`;
+  await Promise.all(
+    assigneeIds.map((uid) => createNotification(uid, message))
+  );
 
   return {
     assignedCount: assignedMembers.count,
@@ -392,6 +410,14 @@ const removeAssigneeService = async ({ leadId, taskId, targetUserId }) => {
       },
     },
   });
+
+  const project = await prisma.project.findUnique({
+    where: { id: task.projectId },
+    select: { name: true },
+  });
+
+  const message = `You have been removed from task '${task.title}' in project '${project ? project.name : ""}'`;
+  await createNotification(targetUserId, message);
 };
 
 module.exports = {

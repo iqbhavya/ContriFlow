@@ -11,6 +11,7 @@ const taskRoutes = require("./routes/task.routes");
 const contributionRoutes = require("./routes/contribution.routes");
 const dashboardRoutes = require("./routes/dashboard.routes");
 const userRoutes = require("./routes/user.routes");
+const notificationRoutes = require("./routes/notification.routes");
 
 const app = express();
 
@@ -28,6 +29,8 @@ app.use("/api/contributions", contributionRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 
 app.use("/api/users", userRoutes);
+
+app.use("/api/notifications", notificationRoutes);
 
 app.get("/me", auth, (req, res) => {
   res.json({

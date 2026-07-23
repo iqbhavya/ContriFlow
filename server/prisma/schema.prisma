@@ -1,5 +1,6 @@
 generator client {
   provider = "prisma-client-js"
+  output   = "../src/lib/generated-client"
 }
 
 datasource db {
@@ -40,6 +41,7 @@ model User {
   contributionMemberships ContributionMember[]
   submittedContributions  Contribution[]       @relation("SubmittedContributions")
   reviewedContributions   Contribution[]       @relation("ReviewedContributions")
+  notifications           Notification[]
 }
 
 model Project {
@@ -146,4 +148,13 @@ model ContributionMember {
   user         User         @relation(fields: [userId], references: [id])
 
   @@unique([contributionId, userId])
+}
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
 }

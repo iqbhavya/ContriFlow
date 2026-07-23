@@ -3,6 +3,7 @@ import { useAuth } from "../../context/AuthContext";
 import { Button } from "../ui/button";
 import { Sun, Moon } from "lucide-react";
 import { useTheme } from "../../context/ThemeContext";
+import NotificationsDropdown from "./NotificationsDropdown";
 
 const getUserIdFromToken = () => {
   const token = localStorage.getItem("token");
@@ -43,6 +44,7 @@ function AppLayout({ children }: { children: React.ReactNode }) {
             </nav>
           </div>
           <div className="flex items-center gap-4">
+            <NotificationsDropdown />
             <Button
               variant="ghost"
               size="icon"

@@ -3,6 +3,7 @@ const {
   requireProjectMember,
   requireProjectLead,
 } = require("../utils/projectAuth");
+const { createNotification } = require("../utils/notifications");
 
 const createContributionService = async ({
   submittedById,
@@ -150,6 +151,23 @@ const reviewContributionService = async ({
       reviewedById: reviewerId,
     },
   });
+
+  const project = await prisma.project.findUnique({
+    where: { id: contribution.task.projectId },
+    select: { name: true }
+  });
+
+  const message = `Your contribution '${contribution.title}' for task '${contribution.task.title}' has been ${status.toLowerCase()} in project '${project ? project.name : ""}'`;
+
+  const coContributors = await prisma.contributionMember.findMany({
+    where: { contributionId },
+    select: { userId: true }
+  });
+
+  const allUserIds = [contribution.submittedById, ...coContributors.map((c) => c.userId)];
+  await Promise.all(
+    allUserIds.map((uid) => createNotification(uid, message))
+  );
 
   return {
     id: updatedContribution.id,
