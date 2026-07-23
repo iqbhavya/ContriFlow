@@ -1,6 +1,8 @@
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { Button } from "../ui/button";
+import { Sun, Moon } from "lucide-react";
+import { useTheme } from "../../context/ThemeContext";
 
 const getUserIdFromToken = () => {
   const token = localStorage.getItem("token");
@@ -16,6 +18,7 @@ const getUserIdFromToken = () => {
 
 function AppLayout({ children }: { children: React.ReactNode }) {
   const { logout } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const currentUserId = getUserIdFromToken();
 
@@ -40,6 +43,19 @@ function AppLayout({ children }: { children: React.ReactNode }) {
             </nav>
           </div>
           <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleTheme}
+              className="h-8 w-8 rounded-full cursor-pointer"
+              title="Toggle Theme"
+            >
+              {theme === "light" ? (
+                <Moon className="h-4 w-4 text-foreground/80" />
+              ) : (
+                <Sun className="h-4 w-4 text-foreground/80" />
+              )}
+            </Button>
             {currentUserId && (
               <Link
                 to={`/profile/${currentUserId}`}
