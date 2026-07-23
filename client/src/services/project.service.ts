@@ -31,3 +31,8 @@ export const joinProject = async (inviteCode: string) => {
   const response = await api.post("/projects/join", { inviteCode });
   return response.data;
 };
+
+export const getProjectActivity = async (projectId: string) => {
+  const response = await api.get(`/projects/${projectId}/activity`);
+  return response.data;
+};

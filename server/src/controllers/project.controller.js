@@ -435,6 +435,102 @@ const updateProject = async (req, res) => {
   }
 };
 
+const getProjectActivity = async (req, res) => {
+  try {
+    const projectId = Number(req.params.projectId);
+
+    if (Number.isNaN(projectId)) {
+      return res.status(400).json({
+        message: "Invalid project ID",
+      });
+    }
+
+    const membership = await requireProjectMember(
+      req.user.userId,
+      projectId
+    );
+
+    if (!membership) {
+      return res.status(403).json({
+        message: "You are not a member of this project",
+      });
+    }
+
+    const members = await prisma.projectMember.findMany({
+      where: { projectId },
+      include: { user: { select: { name: true } } },
+      orderBy: { joinedAt: "desc" },
+      take: 15,
+    });
+
+    const completedTasks = await prisma.task.findMany({
+      where: { projectId, status: "DONE" },
+      orderBy: { updatedAt: "desc" },
+      take: 15,
+    });
+
+    const createdTasks = await prisma.task.findMany({
+      where: { projectId },
+      include: { createdBy: { select: { name: true } } },
+      orderBy: { createdAt: "desc" },
+      take: 15,
+    });
+
+    const contributions = await prisma.contribution.findMany({
+      where: { task: { projectId } },
+      include: {
+        submittedBy: { select: { name: true } },
+        task: { select: { title: true } },
+      },
+      orderBy: { createdAt: "desc" },
+      take: 15,
+    });
+
+    const activities = [];
+
+    members.forEach((m) => {
+      activities.push({
+        type: "MEMBER_JOINED",
+        message: `${m.user.name} joined the project`,
+        timestamp: m.joinedAt,
+      });
+    });
+
+    completedTasks.forEach((t) => {
+      activities.push({
+        type: "TASK_COMPLETED",
+        message: `Task #${t.id} '${t.title}' was completed`,
+        timestamp: t.updatedAt,
+      });
+    });
+
+    createdTasks.forEach((t) => {
+      activities.push({
+        type: "TASK_CREATED",
+        message: `${t.createdBy.name} created task '${t.title}'`,
+        timestamp: t.createdAt,
+      });
+    });
+
+    contributions.forEach((c) => {
+      activities.push({
+        type: "CONTRIBUTION_SUBMITTED",
+        message: `${c.submittedBy.name} submitted contribution for '${c.task.title}'`,
+        timestamp: c.createdAt,
+      });
+    });
+
+    activities.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+    return res.status(200).json(activities);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      message: "Internal Server Error",
+    });
+  }
+};
+
 module.exports = {
   createProject,
   getMyProjects,
@@ -442,4 +538,5 @@ module.exports = {
   joinProject,
   getProjectTasks,
   updateProject,
+  getProjectActivity,
 };

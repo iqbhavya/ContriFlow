@@ -1,9 +1,16 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 
-import { getProject } from "../../services/project.service";
+import { getProject, getProjectActivity } from "../../services/project.service";
 import type { ProjectDetails } from "../../types/project";
 import { Input } from "../../components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "../../components/ui/dialog";
 
 
 import { Button } from "../../components/ui/button";
@@ -37,6 +44,12 @@ import { toast } from "sonner";
 function ProjectDetailsPage() {
   const { projectId } = useParams();
 
+  interface Activity {
+    type: string;
+    message: string;
+    timestamp: string;
+  }
+
   const [project, setProject] = useState<ProjectDetails | null>(null);
 
   const [loading, setLoading] = useState(true);
@@ -45,6 +58,8 @@ function ProjectDetailsPage() {
 
   const [tasks, setTasks] = useState<Task[]>([]);
   const [taskSearchQuery, setTaskSearchQuery] = useState("");
+  const [activities, setActivities] = useState<Activity[]>([]);
+  const [isActivityDialogOpen, setIsActivityDialogOpen] = useState(false);
 
   const navigate = useNavigate();
 
@@ -93,10 +108,21 @@ function ProjectDetailsPage() {
     }
   };
 
+  const fetchActivity = async () => {
+    try {
+      if (!projectId) return;
+      const data = await getProjectActivity(projectId);
+      setActivities(data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchProject();
     fetchTasks();
+    fetchActivity();
   }, [projectId]);
 
   if (loading) {
@@ -338,29 +364,108 @@ function ProjectDetailsPage() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Members ({project.members.length})</CardTitle>
-          </CardHeader>
+        <div className="space-y-6">
+          {/* Recent Activity Card */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle>Recent Activity</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {activities.length === 0 ? (
+                <p className="text-sm text-muted-foreground py-4 text-center">
+                  No recent activity.
+                </p>
+              ) : (
+                <div className="space-y-3">
+                  <ul className="space-y-3">
+                    {activities.slice(0, 5).map((act, index) => (
+                      <li
+                        key={index}
+                        className="text-sm flex items-start gap-2 text-muted-foreground leading-relaxed"
+                      >
+                        <span className="text-primary mt-1 text-xs">•</span>
+                        <div className="flex-1">
+                          <p className="text-foreground text-sm font-medium">
+                            {act.message}
+                          </p>
+                          <span className="block text-[10px] text-muted-foreground/80 mt-0.5">
+                            {new Date(act.timestamp).toLocaleString()}
+                          </span>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                  {activities.length > 5 && (
+                    <Button
+                      variant="link"
+                      onClick={() => setIsActivityDialogOpen(true)}
+                      className="p-0 h-auto text-xs text-primary hover:underline mt-2 font-semibold"
+                    >
+                      View All →
+                    </Button>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
-          <CardContent className="space-y-3">
-            {project.members.map((member) => (
-              <div
-                key={member.id}
-                className="flex justify-between items-center border rounded-lg p-3"
-              >
-                <span>{member.name}</span>
+          
+          <Card>
+            <CardHeader>
+              <CardTitle>Members ({project.members.length})</CardTitle>
+            </CardHeader>
 
-                <Badge
-                  variant={member.role === "LEAD" ? "default" : "secondary"}
+            <CardContent className="space-y-3">
+              {project.members.map((member) => (
+                <div
+                  key={member.id}
+                  className="flex justify-between items-center border rounded-lg p-3"
                 >
-                  {member.role}
-                </Badge>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
+                  <span>{member.name}</span>
+
+                  <Badge
+                    variant={member.role === "LEAD" ? "default" : "secondary"}
+                  >
+                    {member.role}
+                  </Badge>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        </div>
       </div>
+
+      
+      <Dialog open={isActivityDialogOpen} onOpenChange={setIsActivityDialogOpen}>
+        <DialogContent className="sm:max-w-md max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Recent Activity Log</DialogTitle>
+            <DialogDescription>
+              All recorded events for this project in reverse chronological order.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
+            <ul className="space-y-4">
+              {activities.map((act, index) => (
+                <li
+                  key={index}
+                  className="text-sm flex items-start gap-2 pb-3 border-b border-border/40 last:border-0 last:pb-0"
+                >
+                  <span className="text-primary mt-1">•</span>
+                  <div className="flex-1">
+                    <p className="text-foreground leading-relaxed font-medium">
+                      {act.message}
+                    </p>
+                    <span className="block text-xs text-muted-foreground mt-1">
+                      {new Date(act.timestamp).toLocaleString()}
+                    </span>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
