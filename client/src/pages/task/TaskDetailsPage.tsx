@@ -10,10 +10,12 @@ import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
 import AssignMembersDialog from "../../components/task/AssignMembersDialog";
 import { toast } from "sonner";
+import { Trash2 } from "lucide-react";
 
 import type { Contribution } from "../../types/contribution";
-import { getTaskContributions, reviewContribution } from "../../services/contribution.service";
+import { getTaskContributions, reviewContribution, deleteContribution } from "../../services/contribution.service";
 import SubmitContributionDialog from "../../components/contribution/SubmitContributionDialog";
+import { removeTaskAssignee } from "../../services/task.service";
 
 // Local JWT decoder helper
 const getUserIdFromToken = () => {
@@ -68,6 +70,35 @@ function TaskDetailsPage() {
     } catch (error) {
       console.error(error);
       toast.error("Failed to review contribution");
+    }
+  };
+
+  const handleDeleteContribution = async (contributionId: number) => {
+    if (!window.confirm("Are you sure you want to delete this contribution?")) {
+      return;
+    }
+    try {
+      await deleteContribution(contributionId);
+      toast.success("Contribution deleted successfully");
+      fetchTask();
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to delete contribution");
+    }
+  };
+
+  const handleRemoveAssignee = async (userId: number) => {
+    if (!window.confirm("Are you sure you want to remove this assignee from the task?")) {
+      return;
+    }
+    try {
+      if (!taskId) return;
+      await removeTaskAssignee(Number(taskId), userId);
+      toast.success("Assignee removed successfully");
+      fetchTask();
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to remove assignee");
     }
   };
 
@@ -214,8 +245,18 @@ function TaskDetailsPage() {
                 <Badge
                   key={member.id}
                   variant="secondary"
+                  className="flex items-center gap-1"
                 >
                   {member.name}
+                  {task.role === "LEAD" && (
+                    <button
+                      onClick={() => handleRemoveAssignee(member.id)}
+                      className="ml-1 rounded-full text-muted-foreground hover:bg-muted hover:text-foreground outline-none cursor-pointer focus-visible:ring-1 focus-visible:ring-ring flex items-center justify-center w-3 h-3 text-xs font-semibold"
+                      title="Remove member"
+                    >
+                      ×
+                    </button>
+                  )}
                 </Badge>
               ))}
             </div>
@@ -310,9 +351,22 @@ function TaskDetailsPage() {
                         </span>
                       </p>
                     </div>
-                    <Badge variant={badgeVariant} className={badgeClass}>
-                      {contribution.status}
-                    </Badge>
+                    <div className="flex items-center gap-2">
+                      <Badge variant={badgeVariant} className={badgeClass}>
+                        {contribution.status}
+                      </Badge>
+                      {(task.role === "LEAD" || contribution.submittedBy.id === currentUserId) && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDeleteContribution(contribution.id)}
+                          className="h-7 w-7 text-destructive hover:bg-destructive/10 cursor-pointer"
+                          title="Delete contribution"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div>

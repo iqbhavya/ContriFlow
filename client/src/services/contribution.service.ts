@@ -18,3 +18,8 @@ export const reviewContribution = async (
   const response = await api.patch(`/contributions/${contributionId}/review`, data);
   return response.data;
 };
+
+export const deleteContribution = async (contributionId: number) => {
+  const response = await api.delete(`/contributions/${contributionId}`);
+  return response.data;
+};

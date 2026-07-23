@@ -45,3 +45,8 @@ export const deleteTask = async (taskId: number) => {
   const response = await api.delete(`/tasks/${taskId}`);
   return response.data;
 };
+
+export const removeTaskAssignee = async (taskId: number, userId: number) => {
+  const response = await api.delete(`/tasks/${taskId}/assignees/${userId}`);
+  return response.data;
+};

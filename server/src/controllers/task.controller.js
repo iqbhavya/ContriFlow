@@ -10,6 +10,7 @@ const {
   getTaskDetailsService,
   updateTaskService,
   deleteTaskService,
+  removeAssigneeService,
 } = require("../services/task.service");
 
 const createTask = async (req, res) => {
@@ -217,6 +218,33 @@ const deleteTask = async (req,res) => {
 
 };
 
+const removeAssignee = async (req, res) => {
+  try {
+    const taskId = Number(req.params.taskId);
+    const userId = Number(req.params.userId);
+
+    if (Number.isNaN(taskId) || Number.isNaN(userId)) {
+      return res.status(400).json({
+        message: "Invalid task ID or user ID",
+      });
+    }
+
+    await removeAssigneeService({
+      leadId: req.user.userId,
+      taskId,
+      targetUserId: userId,
+    });
+
+    return res.status(200).json({
+      message: "Assignee removed successfully",
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(error.status || 500).json({
+      message: error.message || "Internal Server Error",
+    });
+  }
+};
 
 module.exports = {
   createTask,
@@ -224,4 +252,5 @@ module.exports = {
   getTaskDetails,
   updateTask,
   deleteTask,
+  removeAssignee,
 };

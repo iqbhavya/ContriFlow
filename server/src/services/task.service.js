@@ -342,10 +342,63 @@ const deleteTaskService = async ({ taskId, userId }) => {
   });
 };
 
+const removeAssigneeService = async ({ leadId, taskId, targetUserId }) => {
+  const task = await prisma.task.findUnique({
+    where: {
+      id: taskId,
+    },
+  });
+
+  if (!task) {
+    const error = new Error("Task not found");
+    error.status = 404;
+    throw error;
+  }
+
+  const membership = await requireProjectLead(leadId, task.projectId);
+
+  if (membership === null) {
+    const error = new Error("You are not a member of this project");
+    error.status = 403;
+    throw error;
+  }
+
+  if (membership === false) {
+    const error = new Error("Only project leads can remove assignees");
+    error.status = 403;
+    throw error;
+  }
+
+  const taskMember = await prisma.taskMember.findUnique({
+    where: {
+      taskId_userId: {
+        taskId,
+        userId: targetUserId,
+      },
+    },
+  });
+
+  if (!taskMember) {
+    const error = new Error("User is not assigned to this task");
+    error.status = 404;
+    throw error;
+  }
+
+  await prisma.taskMember.delete({
+    where: {
+      taskId_userId: {
+        taskId,
+        userId: targetUserId,
+      },
+    },
+  });
+};
+
 module.exports = {
   createTaskService,
   assignTaskService,
   getTaskDetailsService,
   updateTaskService,
   deleteTaskService,
+  removeAssigneeService,
 };
