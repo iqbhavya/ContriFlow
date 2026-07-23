@@ -531,6 +531,217 @@ const getProjectActivity = async (req, res) => {
   }
 };
 
+const regenerateInviteCode = async (req, res) => {
+  try {
+    const projectId = Number(req.params.projectId);
+    if (Number.isNaN(projectId)) {
+      return res.status(400).json({ message: "Invalid project ID" });
+    }
+
+    const membership = await requireProjectLead(req.user.userId, projectId);
+    if (!membership) {
+      return res.status(403).json({ message: "Only project leads can do this" });
+    }
+
+    const newInviteCode = Math.random().toString(36).substring(2, 10).toUpperCase();
+
+    const updatedProject = await prisma.project.update({
+      where: { id: projectId },
+      data: { inviteCode: newInviteCode },
+    });
+
+    return res.status(200).json({ inviteCode: updatedProject.inviteCode });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+const leaveProject = async (req, res) => {
+  try {
+    const projectId = Number(req.params.projectId);
+    if (Number.isNaN(projectId)) {
+      return res.status(400).json({ message: "Invalid project ID" });
+    }
+
+    const project = await prisma.project.findUnique({
+      where: { id: projectId },
+    });
+
+    if (!project) {
+      return res.status(404).json({ message: "Project not found" });
+    }
+
+    if (project.createdById === req.user.userId) {
+      return res.status(400).json({ message: "Owner cannot leave. Transfer ownership first." });
+    }
+
+    await prisma.projectMember.delete({
+      where: {
+        userId_projectId: {
+          userId: req.user.userId,
+          projectId,
+        },
+      },
+    });
+
+    return res.status(200).json({ message: "Successfully left the project" });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+const updateMemberRole = async (req, res) => {
+  try {
+    const projectId = Number(req.params.projectId);
+    const targetUserId = Number(req.params.memberId);
+    const { action } = req.body;
+
+    if (Number.isNaN(projectId) || Number.isNaN(targetUserId)) {
+      return res.status(400).json({ message: "Invalid project ID or member ID" });
+    }
+
+    const project = await prisma.project.findUnique({
+      where: { id: projectId },
+    });
+
+    if (!project) {
+      return res.status(404).json({ message: "Project not found" });
+    }
+
+    if (project.createdById !== req.user.userId) {
+      return res.status(403).json({ message: "Only the project owner can change roles" });
+    }
+
+    if (action === "TRANSFER") {
+      await prisma.$transaction(async (tx) => {
+        await tx.projectMember.upsert({
+          where: {
+            userId_projectId: {
+              userId: targetUserId,
+              projectId,
+            },
+          },
+          update: { role: "LEAD" },
+          create: {
+            userId: targetUserId,
+            projectId,
+            role: "LEAD",
+          },
+        });
+
+        await tx.project.update({
+          where: { id: projectId },
+          data: { createdById: targetUserId },
+        });
+      });
+
+      return res.status(200).json({ message: "Ownership transferred successfully" });
+    }
+
+    if (action === "MAKE_LEAD") {
+      await prisma.projectMember.update({
+        where: {
+          userId_projectId: {
+            userId: targetUserId,
+            projectId,
+          },
+        },
+        data: { role: "LEAD" },
+      });
+      return res.status(200).json({ message: "Member promoted to co-lead" });
+    }
+
+    if (action === "DEMOTE") {
+      if (project.createdById === targetUserId) {
+        return res.status(400).json({ message: "Cannot demote the project owner" });
+      }
+
+      await prisma.projectMember.update({
+        where: {
+          userId_projectId: {
+            userId: targetUserId,
+            projectId,
+          },
+        },
+        data: { role: "MEMBER" },
+      });
+      return res.status(200).json({ message: "Co-lead demoted to member" });
+    }
+
+    return res.status(400).json({ message: "Invalid action" });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+const deleteProject = async (req, res) => {
+  try {
+    const projectId = Number(req.params.projectId);
+    if (Number.isNaN(projectId)) {
+      return res.status(400).json({ message: "Invalid project ID" });
+    }
+
+    const project = await prisma.project.findUnique({
+      where: { id: projectId },
+    });
+
+    if (!project) {
+      return res.status(404).json({ message: "Project not found" });
+    }
+
+    if (project.createdById !== req.user.userId) {
+      return res.status(403).json({ message: "Only the project owner can delete this project" });
+    }
+
+    await prisma.$transaction(async (tx) => {
+      const tasks = await tx.task.findMany({
+        where: { projectId },
+      });
+      const taskIds = tasks.map((t) => t.id);
+
+      await tx.contributionMember.deleteMany({
+        where: {
+          contribution: {
+            taskId: { in: taskIds },
+          },
+        },
+      });
+
+      await tx.contribution.deleteMany({
+        where: {
+          taskId: { in: taskIds },
+        },
+      });
+
+      await tx.taskMember.deleteMany({
+        where: {
+          taskId: { in: taskIds },
+        },
+      });
+
+      await tx.task.deleteMany({
+        where: { projectId },
+      });
+
+      await tx.projectMember.deleteMany({
+        where: { projectId },
+      });
+
+      await tx.project.delete({
+        where: { id: projectId },
+      });
+    });
+
+    return res.status(200).json({ message: "Project deleted successfully" });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
 module.exports = {
   createProject,
   getMyProjects,
@@ -539,4 +750,8 @@ module.exports = {
   getProjectTasks,
   updateProject,
   getProjectActivity,
+  regenerateInviteCode,
+  leaveProject,
+  updateMemberRole,
+  deleteProject,
 };

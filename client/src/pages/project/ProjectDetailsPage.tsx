@@ -242,6 +242,11 @@ function ProjectDetailsPage() {
               Invite Member
             </Button>
             )}
+            <Link to={`/projects/${project.id}/settings`}>
+              <Button variant="outline" className="cursor-pointer">
+                Settings
+              </Button>
+            </Link>
           </div>
         </CardHeader>
       </Card>

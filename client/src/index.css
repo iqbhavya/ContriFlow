@@ -120,11 +120,42 @@
 @layer base {
   * {
     @apply border-border outline-ring/50;
-    }
+    transition: background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1), color 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
   body {
     @apply bg-background text-foreground;
-    }
+    background-image: 
+      radial-gradient(at 0% 0%, var(--primary) 0, transparent 40%), 
+      radial-gradient(at 100% 0%, var(--accent) 0, transparent 40%);
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    position: relative;
+  }
+  body::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-color: var(--background);
+    opacity: 0.95;
+    z-index: -1;
+  }
   html {
     @apply font-sans;
-    }
+  }
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary);
 }

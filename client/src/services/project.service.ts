@@ -36,3 +36,23 @@ export const getProjectActivity = async (projectId: string) => {
   const response = await api.get(`/projects/${projectId}/activity`);
   return response.data;
 };
+
+export const regenerateInviteCode = async (projectId: number) => {
+  const response = await api.post(`/projects/${projectId}/invite-code`);
+  return response.data;
+};
+
+export const leaveProject = async (projectId: number) => {
+  const response = await api.post(`/projects/${projectId}/leave`);
+  return response.data;
+};
+
+export const updateMemberRole = async (projectId: number, memberId: number, action: "MAKE_LEAD" | "DEMOTE" | "TRANSFER") => {
+  const response = await api.post(`/projects/${projectId}/members/${memberId}/role`, { action });
+  return response.data;
+};
+
+export const deleteProject = async (projectId: number) => {
+  const response = await api.delete(`/projects/${projectId}`);
+  return response.data;
+};

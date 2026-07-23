@@ -12,6 +12,7 @@ import ProjectDetailsPage from "../pages/project/ProjectDetailsPage";
 import TaskDetailsPage from "../pages/task/TaskDetailsPage";
 import ContributionPage from "../pages/contribution/ContributionPage";
 import ProfilePage from "../pages/profile/ProfilePage";
+import ProjectSettingsPage from "../pages/project/ProjectSettingsPage";
 import ProtectedRoute from "./ProtectedRoute";
 
 
@@ -45,6 +46,15 @@ function AppRouter() {
           <ProtectedRoute>
             <ProjectDetailsPage />
           </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/projects/:projectId/settings"
+          element={
+            <ProtectedRoute>
+              <ProjectSettingsPage />
+            </ProtectedRoute>
           }
         />
 
