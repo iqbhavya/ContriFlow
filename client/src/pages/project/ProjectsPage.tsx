@@ -12,6 +12,7 @@ import {
   CardContent,
 } from "../../components/ui/card";
 import { Badge } from "../../components/ui/badge";
+import { Input } from "../../components/ui/input";
 
 import type { Project } from "../../types/project";
 
@@ -22,12 +23,18 @@ import { useNavigate } from "react-router-dom";
 
 function ProjectsPage() {
   const [projects, setProjects] = useState<Project[]>([]);
-
   const [loading, setLoading] = useState(true);
-
   const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const navigate = useNavigate();
+
+  const filteredProjects = projects.filter(
+    (project) =>
+      project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (project.description &&
+        project.description.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
 
   const fetchProjects = async () => {
     try {
@@ -88,32 +95,50 @@ function ProjectsPage() {
         </div>
       </div>
 
-      {projects.map((project) => (
-        <Card key={project.id} className="mb-4">
-          <CardHeader>
-            <CardTitle>{project.name}</CardTitle>
+      {projects.length > 5 && (
+        <div className="mb-6">
+          <Input
+            type="search"
+            placeholder="Search projects..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full max-w-md bg-transparent"
+          />
+        </div>
+      )}
 
-            <CardDescription>{project.description}</CardDescription>
-          </CardHeader>
-
-          <CardContent>
-            <div className="flex items-center justify-between">
-              <Badge
-                variant={project.role === "LEAD" ? "default" : "secondary"}
-              >
-                {project.role}
-              </Badge>
-
-              <Button
-                variant="outline"
-                onClick={() => navigate(`/projects/${project.id}`)}
-              >
-                Open Project
-              </Button>
-            </div>
-          </CardContent>
+      {filteredProjects.length === 0 ? (
+        <Card className="border border-dashed p-8 text-center text-muted-foreground bg-muted/10">
+          No projects match your search query.
         </Card>
-      ))}
+      ) : (
+        filteredProjects.map((project) => (
+          <Card key={project.id} className="mb-4">
+            <CardHeader>
+              <CardTitle>{project.name}</CardTitle>
+
+              <CardDescription>{project.description}</CardDescription>
+            </CardHeader>
+
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <Badge
+                  variant={project.role === "LEAD" ? "default" : "secondary"}
+                >
+                  {project.role}
+                </Badge>
+
+                <Button
+                  variant="outline"
+                  onClick={() => navigate(`/projects/${project.id}`)}
+                >
+                  Open Project
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        ))
+      )}
     </div>
   );
 }
