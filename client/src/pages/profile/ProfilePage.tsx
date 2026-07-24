@@ -105,9 +105,15 @@ function ProfilePage() {
       );
       toast.success("Username updated successfully!");
       setIsEditing(false);
-    } catch (err: any) {
+    } catch (err) {
       console.error(err);
-      const msg = err.response?.data?.message || "Failed to update username";
+      let msg = "Failed to update username";
+      if (err && typeof err === "object" && "response" in err) {
+        const response = (err as { response?: { data?: { message?: string } } }).response;
+        if (response?.data?.message) {
+          msg = response.data.message;
+        }
+      }
       toast.error(msg);
     } finally {
       setIsSaving(false);
