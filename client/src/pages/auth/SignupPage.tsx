@@ -16,6 +16,7 @@ import { Label } from "../../components/ui/label";
 import { Button } from "../../components/ui/button";
 
 import { toast } from "sonner";
+import ContriFlowLogo from "../../components/common/ContriFlowLogo";
 
 function SignupPage() {
   const navigate = useNavigate();
@@ -49,23 +50,7 @@ function SignupPage() {
       <div className="w-full max-w-sm space-y-6">
         <div className="flex flex-col items-center text-center space-y-2">
           <Link to="/" className="inline-block hover:opacity-90 transition-opacity">
-            <div className="w-9 h-9 rounded-md bg-primary text-primary-foreground flex items-center justify-center font-bold shadow-xs mb-1 mx-auto">
-              <svg
-                className="w-5 h-5"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M16 3h5v5" />
-                <path d="M8 21H3v-5" />
-                <path d="M21 3l-7.5 7.5" />
-                <path d="M3 21l7.5-7.5" />
-                <circle cx="12" cy="12" r="2.5" />
-              </svg>
-            </div>
+            <ContriFlowLogo className="w-10 h-10 mb-1 mx-auto" />
           </Link>
           <h1 className="text-xl font-semibold tracking-tight text-foreground">Create an account</h1>
           <p className="text-xs text-muted-foreground">Get started tracking project contributions</p>

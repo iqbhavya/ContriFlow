@@ -5,6 +5,7 @@ import { Button } from "../ui/button";
 import { Sun, Moon, LogOut, User, FolderKanban, Menu, X } from "lucide-react";
 import { useTheme } from "../../context/ThemeContext";
 import NotificationsDropdown from "./NotificationsDropdown";
+import ContriFlowLogo from "../common/ContriFlowLogo";
 
 const getUserIdFromToken = () => {
   const token = localStorage.getItem("token");
@@ -40,15 +41,7 @@ function AppLayout({ children }: { children: React.ReactNode }) {
         <div className="max-w-6xl mx-auto flex h-14 items-center justify-between px-4 sm:px-6">
           <div className="flex items-center gap-6">
             <Link to="/projects" className="flex items-center gap-2.5 font-bold text-base tracking-tight text-foreground hover:opacity-90 transition-opacity">
-              <div className="h-7 w-7 rounded-md bg-primary flex items-center justify-center text-primary-foreground shadow-xs">
-                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M16 3h5v5" />
-                  <path d="M8 21H3v-5" />
-                  <path d="M21 3l-7.5 7.5" />
-                  <path d="M3 21l7.5-7.5" />
-                  <circle cx="12" cy="12" r="2.5" />
-                </svg>
-              </div>
+              <ContriFlowLogo className="h-7 w-7" />
               <span className="font-semibold text-sm sm:text-base tracking-tight">ContriFlow</span>
             </Link>
 

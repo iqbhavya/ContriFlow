@@ -19,6 +19,15 @@ import {
   Award,
   Sparkles,
 } from "lucide-react";
+import ContriFlowLogo from "../../components/common/ContriFlowLogo";
+
+function LinkedinIcon({ className = "w-3.5 h-3.5" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+      <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.46 8.76a1.69 1.69 0 1 0 0-3.38 1.69 1.69 0 0 0 0 3.38m1.4 9.74V9.89H5.06v8.61h2.8z" />
+    </svg>
+  );
+}
 
 export default function LandingPage() {
   const { token, authLoading } = useAuth();
@@ -41,23 +50,7 @@ export default function LandingPage() {
             to="/"
             className="flex items-center gap-2.5 font-bold text-base tracking-tight text-foreground hover:opacity-90 transition-opacity"
           >
-            <div className="h-7 w-7 rounded-md bg-primary flex items-center justify-center text-primary-foreground shadow-xs">
-              <svg
-                className="w-4 h-4"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M16 3h5v5" />
-                <path d="M8 21H3v-5" />
-                <path d="M21 3l-7.5 7.5" />
-                <path d="M3 21l7.5-7.5" />
-                <circle cx="12" cy="12" r="2.5" />
-              </svg>
-            </div>
+            <ContriFlowLogo className="h-7 w-7" />
             <span className="font-semibold text-sm sm:text-base tracking-tight">ContriFlow</span>
           </Link>
 
@@ -698,23 +691,7 @@ export default function LandingPage() {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="space-y-1">
               <Link to="/" className="flex items-center gap-2 font-bold text-sm text-foreground">
-                <div className="h-5 w-5 rounded bg-primary flex items-center justify-center text-primary-foreground">
-                  <svg
-                    className="w-3 h-3"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M16 3h5v5" />
-                    <path d="M8 21H3v-5" />
-                    <path d="M21 3l-7.5 7.5" />
-                    <path d="M3 21l7.5-7.5" />
-                    <circle cx="12" cy="12" r="2.5" />
-                  </svg>
-                </div>
+                <ContriFlowLogo className="h-5 w-5" />
                 <span>ContriFlow</span>
               </Link>
               <p className="text-[11px] text-muted-foreground">
@@ -735,12 +712,33 @@ export default function LandingPage() {
               <Link to="/signup" className="hover:text-foreground transition-colors">
                 Sign Up
               </Link>
+              <a
+                href="https://www.linkedin.com/in/iqbhavya"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-foreground transition-colors inline-flex items-center gap-1.5 text-primary hover:underline font-medium"
+              >
+                <LinkedinIcon className="w-3.5 h-3.5 text-[#0A66C2]" />
+                <span>LinkedIn</span>
+              </a>
             </div>
           </div>
 
           <div className="pt-4 border-t border-border/40 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-[11px] text-muted-foreground">
             <p>© {currentYear} ContriFlow. All rights reserved.</p>
-            <p>Designed for clubs, hackathons, and collaborative teams.</p>
+            <p>
+              Created by{" "}
+              <a
+                href="https://www.linkedin.com/in/iqbhavya"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-foreground hover:underline font-medium inline-flex items-center gap-1"
+              >
+                Bhavya
+                <LinkedinIcon className="w-3 h-3 text-[#0A66C2]" />
+              </a>{" "}
+              • Designed for clubs, hackathons, and collaborative teams.
+            </p>
           </div>
         </div>
       </footer>
