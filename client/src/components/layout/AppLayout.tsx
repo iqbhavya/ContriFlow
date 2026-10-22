@@ -28,7 +28,7 @@ function AppLayout({ children }: { children: React.ReactNode }) {
 
   const handleLogout = () => {
     logout();
-    navigate("/login");
+    navigate("/");
   };
 
   const isProjectsActive = location.pathname.startsWith("/projects");

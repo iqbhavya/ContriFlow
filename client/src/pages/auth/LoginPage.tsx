@@ -1,7 +1,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, Navigate } from "react-router-dom";
 import { login } from "../../services/auth.service";
 import { useAuth } from "../../context/AuthContext";
 
@@ -22,11 +22,8 @@ import { Button } from "../../components/ui/button";
 import { toast } from "sonner";
 
 function LoginPage() {
-
   const navigate = useNavigate();
-
-  const { login: saveToken } = useAuth();
-
+  const { login: saveToken, token, authLoading } = useAuth();
 
   const {
     register,
@@ -35,6 +32,10 @@ function LoginPage() {
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
   });
+
+  if (!authLoading && token) {
+    return <Navigate to="/projects" replace />;
+  }
 
   const onSubmit = async (data: LoginFormData) => {
     try {
@@ -52,20 +53,25 @@ function LoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-background px-4 py-12">
       <div className="w-full max-w-sm space-y-6">
         <div className="flex flex-col items-center text-center space-y-2">
-          <div className="w-10 h-10 rounded-lg bg-foreground text-background flex items-center justify-center font-bold shadow-sm mb-1">
-            <svg
-              className="w-5 h-5"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <polyline points="16 18 22 12 16 6" />
-              <polyline points="8 6 2 12 8 18" />
-            </svg>
-          </div>
+          <Link to="/" className="inline-block hover:opacity-90 transition-opacity">
+            <div className="w-9 h-9 rounded-md bg-primary text-primary-foreground flex items-center justify-center font-bold shadow-xs mb-1 mx-auto">
+              <svg
+                className="w-5 h-5"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M16 3h5v5" />
+                <path d="M8 21H3v-5" />
+                <path d="M21 3l-7.5 7.5" />
+                <path d="M3 21l7.5-7.5" />
+                <circle cx="12" cy="12" r="2.5" />
+              </svg>
+            </div>
+          </Link>
           <h1 className="text-xl font-semibold tracking-tight text-foreground">Welcome to ContriFlow</h1>
           <p className="text-xs text-muted-foreground">Sign in to your team and project workspace</p>
         </div>

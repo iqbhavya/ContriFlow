@@ -5,6 +5,7 @@ import {
   Navigate,
 } from "react-router-dom";
 
+import LandingPage from "../pages/landing/LandingPage";
 import LoginPage from "../pages/auth/LoginPage";
 import SignupPage from "../pages/auth/SignupPage";
 import DashboardPage from "../pages/dashboard/DashboardPage";
@@ -16,12 +17,11 @@ import ProfilePage from "../pages/profile/ProfilePage";
 import ProjectSettingsPage from "../pages/project/ProjectSettingsPage";
 import ProtectedRoute from "./ProtectedRoute";
 
-
 function AppRouter() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Navigate to="/projects" replace />} />
+        <Route path="/" element={<LandingPage />} />
 
         <Route path="/login" element={<LoginPage />} />
 
@@ -84,7 +84,7 @@ function AppRouter() {
           }
         />
 
-        <Route path="*" element={<Navigate to="/projects" replace />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
   );
