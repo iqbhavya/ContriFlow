@@ -29,7 +29,6 @@ export function AuthProvider({
     const storedToken = localStorage.getItem("token");
 
     if (storedToken) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setToken(storedToken);
     }
     setAuthLoading(false);

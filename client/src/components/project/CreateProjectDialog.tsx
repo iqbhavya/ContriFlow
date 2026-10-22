@@ -26,11 +26,14 @@ import { toast } from "sonner";
 
 
 
+import { Plus } from "lucide-react";
+
 type CreateProjectDialogProps = {
   onProjectCreated: () => void;
+  trigger?: React.ReactNode;
 };
 
-function CreateProjectDialog({ onProjectCreated }: CreateProjectDialogProps) {
+function CreateProjectDialog({ onProjectCreated, trigger }: CreateProjectDialogProps) {
   const form = useForm<CreateProjectForm>({
     resolver: zodResolver(createProjectSchema),
   });
@@ -53,7 +56,12 @@ function CreateProjectDialog({ onProjectCreated }: CreateProjectDialogProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>Create Project</Button>
+        {trigger || (
+          <Button size="sm" className="gap-1.5 cursor-pointer">
+            <Plus className="w-3.5 h-3.5" />
+            New Project
+          </Button>
+        )}
       </DialogTrigger>
 
       <DialogContent>

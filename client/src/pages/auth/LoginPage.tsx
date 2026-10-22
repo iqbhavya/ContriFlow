@@ -13,8 +13,6 @@ import {
 import {
   Card,
   CardContent,
-  CardHeader,
-  CardTitle,
 } from "../../components/ui/card";
 
 import { Input } from "../../components/ui/input";
@@ -33,93 +31,98 @@ function LoginPage() {
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
   });
 
   const onSubmit = async (data: LoginFormData) => {
     try {
-      const response = await login(
-        data.email,
-        data.password
-      );
-
+      const response = await login(data.email, data.password);
       saveToken(response.token);
       toast.success("Welcome back! Logged in successfully.");
-
       navigate("/projects");
-
-  } catch (error) {
-    console.error(error);
-    toast.error("Invalid email or password");
-  }
+    } catch (error) {
+      console.error(error);
+      toast.error("Invalid email or password");
+    }
   };
 
-
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-100 p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle className="text-center text-3xl">
-            ContriFlow
-          </CardTitle>
+    <div className="flex min-h-screen items-center justify-center bg-background px-4 py-12">
+      <div className="w-full max-w-sm space-y-6">
+        <div className="flex flex-col items-center text-center space-y-2">
+          <div className="w-10 h-10 rounded-lg bg-foreground text-background flex items-center justify-center font-bold shadow-sm mb-1">
+            <svg
+              className="w-5 h-5"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <polyline points="16 18 22 12 16 6" />
+              <polyline points="8 6 2 12 8 18" />
+            </svg>
+          </div>
+          <h1 className="text-xl font-semibold tracking-tight text-foreground">Welcome to ContriFlow</h1>
+          <p className="text-xs text-muted-foreground">Sign in to your team and project workspace</p>
+        </div>
 
-          <p className="text-center text-muted-foreground">
-            Sign in to your account
-          </p>
-        </CardHeader>
+        <Card className="border border-border/70 shadow-sm bg-card">
+          <CardContent className="pt-6">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="email" className="text-xs font-medium">Email address</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="name@example.com"
+                  className="h-9 text-sm"
+                  autoComplete="email"
+                  {...register("email")}
+                />
+                {errors.email && (
+                  <p className="text-xs text-rose-500 font-medium">
+                    {errors.email.message}
+                  </p>
+                )}
+              </div>
 
-        <CardContent>
-          <form
-            onSubmit={handleSubmit(onSubmit)}
-            className="space-y-5"
-          >
-            <div className="space-y-2">
-              <Label>Email</Label>
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="password" className="text-xs font-medium">Password</Label>
+                </div>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="••••••••"
+                  className="h-9 text-sm"
+                  autoComplete="current-password"
+                  {...register("password")}
+                />
+                {errors.password && (
+                  <p className="text-xs text-rose-500 font-medium">
+                    {errors.password.message}
+                  </p>
+                )}
+              </div>
 
-              <Input
-                type="email"
-                placeholder="Enter your email"
-                {...register("email")}
-              />
+              <Button type="submit" className="w-full h-9 text-xs font-medium cursor-pointer" disabled={isSubmitting}>
+                {isSubmitting ? "Signing in..." : "Sign in"}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
 
-              {errors.email && (
-                <p className="text-sm text-red-500">
-                  {errors.email.message}
-                </p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label>Password</Label>
-
-              <Input
-                type="password"
-                placeholder="Enter your password"
-                {...register("password")}
-              />
-
-              {errors.password && (
-                <p className="text-sm text-red-500">
-                  {errors.password.message}
-                </p>
-              )}
-            </div>
-
-            <Button type="submit" className="w-full">
-              Login
-            </Button>
-          </form>
-
-          <p className="text-center text-sm text-muted-foreground mt-4">
-            Don't have an account?{" "}
-            <Link to="/signup" className="text-primary hover:underline font-semibold">
-              Sign up
-            </Link>
-          </p>
-        </CardContent>
-      </Card>
+        <p className="text-center text-xs text-muted-foreground">
+          Don't have an account?{" "}
+          <Link to="/signup" className="text-foreground hover:underline font-medium">
+            Create an account
+          </Link>
+        </p>
+      </div>
     </div>
   );
 }

@@ -42,30 +42,35 @@ export default function AssignMembersDialog({
   const [loading, setLoading] = useState(false);
   const [assigning, setAssigning] = useState(false);
 
-  const fetchMembers = async () => {
-    try {
-      setLoading(true);
-
-      const data = await getProjectMembers(projectId);
-      
-      const availableMembers = data.filter(
-            (member: ProjectMember) =>
-                !assignedMemberIds.includes(member.id)
-    );
-      setMembers(availableMembers);
-    } catch (error) {
-      console.error(error);
-      toast.error("Failed to load project members");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
+    let isMounted = true;
     if (open) {
-      fetchMembers();
+      const loadMembers = async () => {
+        try {
+          setLoading(true);
+          const data = await getProjectMembers(projectId);
+          if (isMounted) {
+            const available = data.filter(
+              (member: ProjectMember) => !assignedMemberIds.includes(member.id)
+            );
+            setMembers(available);
+          }
+        } catch (error) {
+          console.error(error);
+          toast.error("Failed to load project members");
+        } finally {
+          if (isMounted) setLoading(false);
+        }
+      };
+      void loadMembers();
+    } else {
+      setSelectedMembers([]);
     }
-  }, [open]);
+
+    return () => {
+      isMounted = false;
+    };
+  }, [open, projectId, assignedMemberIds]);
 
   const toggleMember = (memberId: number) => {
     setSelectedMembers((prev) =>

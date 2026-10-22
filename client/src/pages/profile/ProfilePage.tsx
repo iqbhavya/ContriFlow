@@ -1,10 +1,23 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
 import { getUserProfile, updateUserProfile } from "../../services/user.service";
-import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
 import { Badge } from "../../components/ui/badge";
 import { Input } from "../../components/ui/input";
-import { Mail, Calendar, ArrowLeft, Pencil, Check, X, Loader2 } from "lucide-react";
+import { Button } from "../../components/ui/button";
+import {
+  Mail,
+  Calendar,
+  ArrowLeft,
+  Pencil,
+  Check,
+  X,
+  Loader2,
+  FolderGit2,
+  CheckSquare,
+  GitPullRequest,
+  ChevronRight,
+  ExternalLink,
+} from "lucide-react";
 import { toast } from "sonner";
 
 const getUserIdFromToken = () => {
@@ -19,7 +32,6 @@ const getUserIdFromToken = () => {
   }
 };
 
-
 interface UserProfile {
   user: {
     id: number;
@@ -30,6 +42,7 @@ interface UserProfile {
   projects: Array<{
     id: number;
     name: string;
+    description?: string;
     role: string;
     joinedAt: string;
   }>;
@@ -39,8 +52,10 @@ interface UserProfile {
     status: string;
     createdAt: string;
     task: {
+      id: number;
       title: string;
       project: {
+        id: number;
         name: string;
       };
     };
@@ -50,6 +65,7 @@ interface UserProfile {
     title: string;
     status: string;
     project: {
+      id: number;
       name: string;
     };
     assignedAt: string;
@@ -63,24 +79,25 @@ function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false);
   const [editedName, setEditedName] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const [activeTab, setActiveTab] = useState<"projects" | "tasks" | "contributions">("tasks");
   const currentUserId = getUserIdFromToken();
 
-  useEffect(() => {
+  const fetchProfile = useCallback(async () => {
     if (!userId) return;
-
-    const fetchProfile = async () => {
-      try {
-        const data = await getUserProfile(Number(userId));
-        setProfile(data);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProfile();
+    try {
+      const data = await getUserProfile(Number(userId));
+      setProfile(data);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to load user profile");
+    } finally {
+      setLoading(false);
+    }
   }, [userId]);
+
+  useEffect(() => {
+    fetchProfile();
+  }, [fetchProfile]);
 
   const handleSave = async () => {
     if (!profile || !userId) return;
@@ -103,7 +120,7 @@ function ProfilePage() {
             }
           : null
       );
-      toast.success("Username updated successfully!");
+      toast.success("Username updated successfully");
       setIsEditing(false);
     } catch (err) {
       console.error(err);
@@ -121,192 +138,338 @@ function ProfilePage() {
   };
 
   if (loading) {
-    return <div className="py-12 text-center text-muted-foreground text-sm">Loading profile...</div>;
+    return (
+      <div className="py-16 text-center">
+        <div className="inline-block w-5 h-5 border-2 border-foreground/20 border-t-foreground rounded-full animate-spin mb-2" />
+        <p className="text-xs text-muted-foreground">Loading profile...</p>
+      </div>
+    );
   }
 
   if (!profile) {
-    return <div className="py-12 text-center text-muted-foreground text-sm">User profile not found.</div>;
+    return (
+      <div className="py-16 text-center space-y-3">
+        <p className="text-sm text-muted-foreground">User profile not found.</p>
+        <Link to="/projects">
+          <Button variant="outline" size="sm">
+            Back to projects
+          </Button>
+        </Link>
+      </div>
+    );
   }
 
+  const isSelf = currentUserId === profile.user.id;
+  const initials = profile.user.name.slice(0, 2).toUpperCase();
+
   return (
-    <div className="space-y-6">
+    <div className="max-w-4xl mx-auto space-y-6 pb-12">
       <Link
         to="/projects"
-        className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+        className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
       >
-        <ArrowLeft className="w-4 h-4" />
-        Back to Projects
+        <ArrowLeft className="w-3.5 h-3.5" />
+        Back to projects
       </Link>
 
       <div className="grid md:grid-cols-3 gap-6">
-        <div className="space-y-6">
-          <Card>
-            <CardContent className="p-6 space-y-6">
-              <div className="flex flex-col items-center text-center space-y-3">
-                <div className="w-20 h-20 rounded-full bg-primary/10 border border-primary/20 text-primary flex items-center justify-center text-3xl font-bold font-mono">
-                  {profile.user.name.slice(0, 2).toUpperCase()}
-                </div>
-                <div className="space-y-1 w-full flex flex-col items-center">
-                  {isEditing ? (
-                    <div className="flex items-center gap-2 max-w-[240px] w-full justify-center mt-1">
-                      <Input
-                        value={editedName}
-                        onChange={(e) => setEditedName(e.target.value)}
-                        className="h-8 text-center font-semibold text-base py-0 text-foreground border-primary/30 focus-visible:ring-primary"
-                        placeholder="Enter name"
-                        disabled={isSaving}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") handleSave();
-                          if (e.key === "Escape") setIsEditing(false);
-                        }}
-                        autoFocus
-                      />
-                      <button
-                        onClick={handleSave}
-                        disabled={isSaving}
-                        className="p-1.5 bg-primary/10 text-primary hover:bg-primary/20 disabled:opacity-50 disabled:bg-transparent rounded-lg transition-colors cursor-pointer flex items-center justify-center"
-                        title="Save Name"
-                      >
-                        {isSaving ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                        ) : (
-                          <Check className="w-4 h-4" />
-                        )}
-                      </button>
-                      <button
-                        onClick={() => setIsEditing(false)}
-                        disabled={isSaving}
-                        className="p-1.5 bg-muted/60 text-muted-foreground hover:bg-muted/80 disabled:opacity-50 rounded-lg transition-colors cursor-pointer flex items-center justify-center"
-                        title="Cancel"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="flex items-center justify-center gap-2 group">
-                      <h3 className="text-xl font-bold leading-none">{profile.user.name}</h3>
-                      {currentUserId === profile.user.id && (
-                        <button
-                          onClick={() => {
-                            setEditedName(profile.user.name);
-                            setIsEditing(true);
-                          }}
-                          className="p-1 text-muted-foreground hover:text-primary rounded-full hover:bg-primary/5 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-all cursor-pointer duration-200"
-                          title="Edit Username"
-                        >
-                          <Pencil className="w-3.5 h-3.5" />
-                        </button>
-                      )}
-                    </div>
-                  )}
-                  <div className="flex items-center justify-center gap-1.5 text-sm text-muted-foreground pt-2">
-                    <Mail className="w-4 h-4" />
-                    <span>{profile.user.email}</span>
-                  </div>
-                  <div className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground/80 pt-1">
-                    <Calendar className="w-3.5 h-3.5" />
-                    <span>Member since {new Date(profile.user.createdAt).toLocaleDateString()}</span>
-                  </div>
-                </div>
+        {/* User Card Sidebar */}
+        <div className="space-y-4">
+          <div className="rounded-lg border border-border/70 bg-card p-5 space-y-5">
+            <div className="flex flex-col items-center text-center space-y-3">
+              <div className="w-16 h-16 rounded-full bg-muted border border-border/60 flex items-center justify-center font-mono text-xl font-bold text-foreground">
+                {initials}
               </div>
 
-              <div className="grid grid-cols-3 gap-2 pt-4 border-t border-border/50">
-                <div className="flex flex-col items-center">
-                  <span className="text-xl font-bold text-foreground">{profile.projects.length}</span>
-                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground mt-0.5">Projects</span>
+              <div className="space-y-1 w-full">
+                {isEditing ? (
+                  <div className="flex items-center gap-1.5 justify-center mt-1">
+                    <Input
+                      value={editedName}
+                      onChange={(e) => setEditedName(e.target.value)}
+                      className="h-8 text-center text-xs font-semibold py-0"
+                      placeholder="Enter name"
+                      disabled={isSaving}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") handleSave();
+                        if (e.key === "Escape") setIsEditing(false);
+                      }}
+                      autoFocus
+                    />
+                    <button
+                      onClick={handleSave}
+                      disabled={isSaving}
+                      className="p-1.5 text-emerald-600 hover:bg-emerald-500/10 rounded-md transition-colors cursor-pointer"
+                      title="Save name"
+                    >
+                      {isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+                    </button>
+                    <button
+                      onClick={() => setIsEditing(false)}
+                      disabled={isSaving}
+                      className="p-1.5 text-muted-foreground hover:bg-muted rounded-md transition-colors cursor-pointer"
+                      title="Cancel"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center gap-1.5 group">
+                    <h1 className="text-base font-semibold text-foreground">{profile.user.name}</h1>
+                    {isSelf && (
+                      <button
+                        onClick={() => {
+                          setEditedName(profile.user.name);
+                          setIsEditing(true);
+                        }}
+                        className="p-1 text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                        title="Edit name"
+                      >
+                        <Pencil className="w-3 h-3" />
+                      </button>
+                    )}
+                  </div>
+                )}
+
+                <div className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground pt-1">
+                  <Mail className="w-3.5 h-3.5" />
+                  <span className="truncate max-w-[200px]">{profile.user.email}</span>
                 </div>
-                <div className="flex flex-col items-center">
-                  <span className="text-xl font-bold text-foreground">{profile.tasks.length}</span>
-                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground mt-0.5">Tasks</span>
-                </div>
-                <div className="flex flex-col items-center">
-                  <span className="text-xl font-bold text-foreground">{profile.contributions.length}</span>
-                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground mt-0.5">Contribs</span>
+                <div className="flex items-center justify-center gap-1.5 text-[11px] text-muted-foreground">
+                  <Calendar className="w-3 h-3" />
+                  <span>Joined {new Date(profile.user.createdAt).toLocaleDateString()}</span>
                 </div>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+
+            {/* Stat Counters */}
+            <div className="grid grid-cols-3 gap-2 pt-3 border-t border-border/60 text-center">
+              <button
+                onClick={() => setActiveTab("projects")}
+                className={`p-2 rounded-md transition-colors text-left sm:text-center cursor-pointer ${
+                  activeTab === "projects" ? "bg-muted" : "hover:bg-muted/50"
+                }`}
+              >
+                <span className="block text-base font-semibold text-foreground font-mono">
+                  {profile.projects.length}
+                </span>
+                <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Projects</span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab("tasks")}
+                className={`p-2 rounded-md transition-colors text-left sm:text-center cursor-pointer ${
+                  activeTab === "tasks" ? "bg-muted" : "hover:bg-muted/50"
+                }`}
+              >
+                <span className="block text-base font-semibold text-foreground font-mono">
+                  {profile.tasks.length}
+                </span>
+                <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Tasks</span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab("contributions")}
+                className={`p-2 rounded-md transition-colors text-left sm:text-center cursor-pointer ${
+                  activeTab === "contributions" ? "bg-muted" : "hover:bg-muted/50"
+                }`}
+              >
+                <span className="block text-base font-semibold text-foreground font-mono">
+                  {profile.contributions.length}
+                </span>
+                <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Contribs</span>
+              </button>
+            </div>
+          </div>
         </div>
 
-        <div className="md:col-span-2 space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Assigned Projects</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {profile.projects.length === 0 ? (
-                <p className="text-sm text-muted-foreground italic">Not assigned to any projects.</p>
-              ) : (
-                <div className="grid gap-3 sm:grid-cols-2">
-                  {profile.projects.map((proj) => (
-                    <div key={proj.id} className="p-4 border rounded-xl flex items-center justify-between bg-card hover:border-primary/20 transition-all">
-                      <div className="space-y-1">
-                        <span className="font-semibold text-foreground">{proj.name}</span>
-                        <span className="block text-xs text-muted-foreground">
-                          Joined {new Date(proj.joinedAt).toLocaleDateString()}
-                        </span>
-                      </div>
-                      <Badge variant={proj.role === "LEAD" ? "default" : "secondary"}>
-                        {proj.role}
-                      </Badge>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+        {/* Content Tabs Area */}
+        <div className="md:col-span-2 space-y-4">
+          {/* Navigation Tab Bar */}
+          <div className="flex items-center gap-1 border-b border-border/60 pb-2">
+            <button
+              onClick={() => setActiveTab("tasks")}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-medium transition-colors cursor-pointer ${
+                activeTab === "tasks"
+                  ? "bg-foreground text-background"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+              }`}
+            >
+              <CheckSquare className="w-3.5 h-3.5" />
+              Tasks ({profile.tasks.length})
+            </button>
+            <button
+              onClick={() => setActiveTab("contributions")}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-medium transition-colors cursor-pointer ${
+                activeTab === "contributions"
+                  ? "bg-foreground text-background"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+              }`}
+            >
+              <GitPullRequest className="w-3.5 h-3.5" />
+              Contributions ({profile.contributions.length})
+            </button>
+            <button
+              onClick={() => setActiveTab("projects")}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-medium transition-colors cursor-pointer ${
+                activeTab === "projects"
+                  ? "bg-foreground text-background"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+              }`}
+            >
+              <FolderGit2 className="w-3.5 h-3.5" />
+              Projects ({profile.projects.length})
+            </button>
+          </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Task Assignments</CardTitle>
-            </CardHeader>
-            <CardContent>
+          {/* Tab 1: Tasks */}
+          {activeTab === "tasks" && (
+            <div className="space-y-2">
               {profile.tasks.length === 0 ? (
-                <p className="text-sm text-muted-foreground italic">No tasks assigned.</p>
-              ) : (
-                <div className="space-y-3">
-                  {profile.tasks.map((task) => (
-                    <div key={task.id} className="flex justify-between items-center p-3 border rounded-xl hover:border-primary/20 transition-all bg-card">
-                      <div className="space-y-1">
-                        <span className="font-semibold text-sm text-foreground">{task.title}</span>
-                        <span className="block text-xs text-muted-foreground">{task.project.name}</span>
-                      </div>
-                      <Badge variant={task.status === "DONE" ? "default" : task.status === "IN_PROGRESS" ? "secondary" : "outline"}>
-                        {task.status}
-                      </Badge>
-                    </div>
-                  ))}
+                <div className="rounded-lg border border-dashed border-border/70 p-8 text-center">
+                  <CheckSquare className="w-8 h-8 text-muted-foreground/40 mx-auto mb-2" />
+                  <p className="text-xs text-muted-foreground">No tasks currently assigned to this user.</p>
                 </div>
-              )}
-            </CardContent>
-          </Card>
+              ) : (
+                <div className="rounded-lg border border-border/70 bg-card divide-y divide-border/60 overflow-hidden">
+                  {profile.tasks.map((task) => {
+                    const statusDot =
+                      task.status === "DONE"
+                        ? "bg-emerald-500"
+                        : task.status === "IN_PROGRESS"
+                        ? "bg-amber-500"
+                        : "bg-muted-foreground/50";
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Recent Contributions</CardTitle>
-            </CardHeader>
-            <CardContent>
+                    return (
+                      <Link
+                        key={task.id}
+                        to={`/tasks/${task.id}`}
+                        className="flex items-center justify-between p-3.5 hover:bg-muted/30 transition-colors group"
+                      >
+                        <div className="space-y-0.5 min-w-0 pr-3">
+                          <div className="flex items-center gap-2">
+                            <span className={`w-2 h-2 rounded-full shrink-0 ${statusDot}`} />
+                            <span className="text-xs font-medium text-foreground group-hover:text-primary transition-colors truncate">
+                              {task.title}
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-muted-foreground pl-4">
+                            {task.project.name}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <Badge
+                            variant={task.status === "DONE" ? "default" : task.status === "IN_PROGRESS" ? "secondary" : "outline"}
+                            className="text-[10px] py-0 px-1.5 h-4"
+                          >
+                            {task.status.replace("_", " ")}
+                          </Badge>
+                          <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/40 group-hover:text-muted-foreground transition-colors" />
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Tab 2: Contributions */}
+          {activeTab === "contributions" && (
+            <div className="space-y-2">
               {profile.contributions.length === 0 ? (
-                <p className="text-sm text-muted-foreground italic">No contributions submitted yet.</p>
+                <div className="rounded-lg border border-dashed border-border/70 p-8 text-center">
+                  <GitPullRequest className="w-8 h-8 text-muted-foreground/40 mx-auto mb-2" />
+                  <p className="text-xs text-muted-foreground">No contributions submitted yet.</p>
+                </div>
               ) : (
-                <div className="space-y-3">
-                  {profile.contributions.map((cont) => (
-                    <div key={cont.id} className="flex justify-between items-center p-3 border rounded-xl hover:border-primary/20 transition-all bg-card">
-                      <div className="space-y-1">
-                        <span className="font-semibold text-sm text-foreground">{cont.title}</span>
-                        <span className="block text-xs text-muted-foreground">
-                          {cont.task.title} • {cont.task.project.name}
+                <div className="rounded-lg border border-border/70 bg-card divide-y divide-border/60 overflow-hidden">
+                  {profile.contributions.map((cont) => {
+                    const statusBadge =
+                      cont.status === "APPROVED" ? (
+                        <span className="text-[10px] text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 rounded-md font-medium">
+                          Approved
                         </span>
+                      ) : cont.status === "REJECTED" ? (
+                        <span className="text-[10px] text-rose-600 dark:text-rose-400 bg-rose-500/10 border border-rose-500/20 px-1.5 py-0.5 rounded-md font-medium">
+                          Rejected
+                        </span>
+                      ) : (
+                        <span className="text-[10px] text-amber-600 dark:text-amber-400 bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.5 rounded-md font-medium">
+                          Pending
+                        </span>
+                      );
+
+                    return (
+                      <Link
+                        key={cont.id}
+                        to={`/tasks/${cont.task.id}`}
+                        className="flex items-center justify-between p-3.5 hover:bg-muted/30 transition-colors group"
+                      >
+                        <div className="space-y-0.5 min-w-0 pr-3">
+                          <span className="text-xs font-medium text-foreground group-hover:text-primary transition-colors block truncate">
+                            {cont.title}
+                          </span>
+                          <p className="text-[11px] text-muted-foreground truncate">
+                            {cont.task.title} • {cont.task.project.name}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          {statusBadge}
+                          <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/40 group-hover:text-muted-foreground transition-colors" />
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Tab 3: Projects */}
+          {activeTab === "projects" && (
+            <div className="space-y-2">
+              {profile.projects.length === 0 ? (
+                <div className="rounded-lg border border-dashed border-border/70 p-8 text-center">
+                  <FolderGit2 className="w-8 h-8 text-muted-foreground/40 mx-auto mb-2" />
+                  <p className="text-xs text-muted-foreground">Not a member of any projects.</p>
+                </div>
+              ) : (
+                <div className="grid gap-2.5 sm:grid-cols-2">
+                  {profile.projects.map((proj) => (
+                    <Link
+                      key={proj.id}
+                      to={`/projects/${proj.id}`}
+                      className="p-3.5 rounded-lg border border-border/70 bg-card hover:border-foreground/30 transition-all flex flex-col justify-between group"
+                    >
+                      <div className="space-y-1">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-xs font-semibold text-foreground group-hover:text-primary transition-colors truncate">
+                            {proj.name}
+                          </span>
+                          <Badge
+                            variant={proj.role === "LEAD" ? "default" : "outline"}
+                            className="text-[10px] py-0 px-1.5 h-4 shrink-0"
+                          >
+                            {proj.role === "LEAD" ? "Lead" : "Member"}
+                          </Badge>
+                        </div>
+                        {proj.description && (
+                          <p className="text-[11px] text-muted-foreground line-clamp-2">
+                            {proj.description}
+                          </p>
+                        )}
                       </div>
-                      <Badge variant={cont.status === "APPROVED" ? "default" : cont.status === "REJECTED" ? "destructive" : "outline"}>
-                        {cont.status}
-                      </Badge>
-                    </div>
+                      <div className="flex items-center justify-between pt-3 mt-2 border-t border-border/50 text-[10px] text-muted-foreground">
+                        <span>Joined {new Date(proj.joinedAt).toLocaleDateString()}</span>
+                        <ExternalLink className="w-3 h-3 text-muted-foreground/50 group-hover:text-muted-foreground" />
+                      </div>
+                    </Link>
                   ))}
                 </div>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -314,3 +477,4 @@ function ProfilePage() {
 }
 
 export default ProfilePage;
+

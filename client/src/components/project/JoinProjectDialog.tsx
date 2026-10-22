@@ -21,6 +21,8 @@ import {
 } from "../../lib/validations/project.schema";
 import { joinProject } from "../../services/project.service";
 
+import { KeyRound } from "lucide-react";
+
 type JoinProjectDialogProps = {
   onProjectJoined: () => void;
   trigger?: React.ReactNode;
@@ -51,7 +53,12 @@ function JoinProjectDialog({ onProjectJoined, trigger }: JoinProjectDialogProps)
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        {trigger || <Button variant="outline">Join Project</Button>}
+        {trigger || (
+          <Button variant="outline" size="sm" className="gap-1.5 cursor-pointer">
+            <KeyRound className="w-3.5 h-3.5" />
+            Join with Code
+          </Button>
+        )}
       </DialogTrigger>
 
       <DialogContent className="sm:max-w-md">

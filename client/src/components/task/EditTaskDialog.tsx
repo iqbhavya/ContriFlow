@@ -21,24 +21,26 @@ import {
 
 import { updateTask } from "../../services/task.service";
 import { toast } from "sonner";
+import { Pencil } from "lucide-react";
 
 type EditTaskDialogProps = {
   task: {
     id: number;
     title: string;
-    description: string | null;
+    description?: string | null;
     deadline: string | null;
   };
   onTaskUpdated: () => void;
+  className?: string;
 };
 
-export default function EditTaskDialog({ task, onTaskUpdated }: EditTaskDialogProps) {
+export default function EditTaskDialog({ task, onTaskUpdated, className }: EditTaskDialogProps) {
   const getFormattedDate = (dateStr: string | null) => {
     if (!dateStr) return "";
     try {
       const date = new Date(dateStr);
       return date.toISOString().split("T")[0];
-    } catch (e) {
+    } catch {
       return "";
     }
   };
@@ -72,7 +74,12 @@ export default function EditTaskDialog({ task, onTaskUpdated }: EditTaskDialogPr
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline">
+        <Button
+          variant="outline"
+          size="sm"
+          className={className || "w-full text-xs h-8 cursor-pointer"}
+        >
+          <Pencil className="w-3.5 h-3.5 mr-1" />
           Edit Task
         </Button>
       </DialogTrigger>
