@@ -2,6 +2,7 @@ import {
   BrowserRouter,
   Routes,
   Route,
+  Navigate,
 } from "react-router-dom";
 
 import LoginPage from "../pages/auth/LoginPage";
@@ -20,6 +21,8 @@ function AppRouter() {
   return (
     <BrowserRouter>
       <Routes>
+        <Route path="/" element={<Navigate to="/projects" replace />} />
+
         <Route path="/login" element={<LoginPage />} />
 
         <Route path="/signup" element={<SignupPage />} />
@@ -80,6 +83,8 @@ function AppRouter() {
             </ProtectedRoute>
           }
         />
+
+        <Route path="*" element={<Navigate to="/projects" replace />} />
       </Routes>
     </BrowserRouter>
   );

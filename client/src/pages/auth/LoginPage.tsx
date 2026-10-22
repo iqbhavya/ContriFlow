@@ -1,7 +1,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { login } from "../../services/auth.service";
 import { useAuth } from "../../context/AuthContext";
 
@@ -111,6 +111,13 @@ function LoginPage() {
               Login
             </Button>
           </form>
+
+          <p className="text-center text-sm text-muted-foreground mt-4">
+            Don't have an account?{" "}
+            <Link to="/signup" className="text-primary hover:underline font-semibold">
+              Sign up
+            </Link>
+          </p>
         </CardContent>
       </Card>
     </div>
