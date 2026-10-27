@@ -12,7 +12,7 @@ const contributionRoutes = require("./routes/contribution.routes");
 const dashboardRoutes = require("./routes/dashboard.routes");
 const userRoutes = require("./routes/user.routes");
 const notificationRoutes = require("./routes/notification.routes");
-
+const aiRoutes = require("./routes/ai.routes");
 const app = express();
 
 app.use(express.json());
@@ -31,6 +31,8 @@ app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/users", userRoutes);
 
 app.use("/api/notifications", notificationRoutes);
+
+app.use("/api/ai", aiRoutes);
 
 app.get("/me", auth, (req, res) => {
   res.json({

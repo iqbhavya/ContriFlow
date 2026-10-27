@@ -50,3 +50,19 @@ export const removeTaskAssignee = async (taskId: number, userId: number) => {
   const response = await api.delete(`/tasks/${taskId}/assignees/${userId}`);
   return response.data;
 };
+
+export type SuggestedTask = {
+  title : string;
+  description : string;
+};
+
+export const generateTaskSuggestions = async (
+  prompt : string,
+  projectId : number
+) : Promise<SuggestedTask[]> => {
+  const response = await api.post("/ai/generate-tasks", {
+    prompt,
+    projectId,
+  });
+  return response.data.tasks;
+};

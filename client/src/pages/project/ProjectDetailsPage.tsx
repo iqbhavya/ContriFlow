@@ -31,6 +31,7 @@ import EditProjectDialog from "../../components/project/EditProjectDialog";
 import { getProjectTasks } from "../../services/task.service";
 import type { Task } from "../../types/task";
 import { toast } from "sonner";
+import AITaskGeneratorDialog from "../../components/task/AITaskGeneratorDialog";
 
 interface Activity {
   type: string;
@@ -226,6 +227,10 @@ function ProjectDetailsPage() {
 
           {isLead && (
             <div className="flex items-center gap-2">
+              <AITaskGeneratorDialog
+                projectId={project.id}
+                onTasksCreated={fetchProjectData}
+              />
               <CreateTaskDialog
                 projectId={project.id}
                 onTaskCreated={fetchProjectData}
@@ -268,44 +273,40 @@ function ProjectDetailsPage() {
               <button
                 type="button"
                 onClick={() => setStatusFilter("ALL")}
-                className={`px-2.5 py-1 rounded-sm font-medium transition-colors cursor-pointer whitespace-nowrap ${
-                  statusFilter === "ALL"
+                className={`px-2.5 py-1 rounded-sm font-medium transition-colors cursor-pointer whitespace-nowrap ${statusFilter === "ALL"
                     ? "bg-card text-foreground shadow-2xs font-semibold"
                     : "text-muted-foreground hover:text-foreground"
-                }`}
+                  }`}
               >
                 All ({tasks.length})
               </button>
               <button
                 type="button"
                 onClick={() => setStatusFilter("TODO")}
-                className={`px-2.5 py-1 rounded-sm font-medium transition-colors cursor-pointer whitespace-nowrap ${
-                  statusFilter === "TODO"
+                className={`px-2.5 py-1 rounded-sm font-medium transition-colors cursor-pointer whitespace-nowrap ${statusFilter === "TODO"
                     ? "bg-card text-foreground shadow-2xs font-semibold"
                     : "text-muted-foreground hover:text-foreground"
-                }`}
+                  }`}
               >
                 To Do ({taskStats.todo})
               </button>
               <button
                 type="button"
                 onClick={() => setStatusFilter("IN_PROGRESS")}
-                className={`px-2.5 py-1 rounded-sm font-medium transition-colors cursor-pointer whitespace-nowrap ${
-                  statusFilter === "IN_PROGRESS"
+                className={`px-2.5 py-1 rounded-sm font-medium transition-colors cursor-pointer whitespace-nowrap ${statusFilter === "IN_PROGRESS"
                     ? "bg-card text-foreground shadow-2xs font-semibold"
                     : "text-muted-foreground hover:text-foreground"
-                }`}
+                  }`}
               >
                 In Progress ({taskStats.inProgress})
               </button>
               <button
                 type="button"
                 onClick={() => setStatusFilter("DONE")}
-                className={`px-2.5 py-1 rounded-sm font-medium transition-colors cursor-pointer whitespace-nowrap ${
-                  statusFilter === "DONE"
+                className={`px-2.5 py-1 rounded-sm font-medium transition-colors cursor-pointer whitespace-nowrap ${statusFilter === "DONE"
                     ? "bg-card text-foreground shadow-2xs font-semibold"
                     : "text-muted-foreground hover:text-foreground"
-                }`}
+                  }`}
               >
                 Done ({taskStats.done})
               </button>
@@ -356,9 +357,8 @@ function ProjectDetailsPage() {
                         </div>
 
                         <div className="space-y-0.5 min-w-0">
-                          <p className={`text-sm font-medium text-foreground group-hover:text-primary transition-colors truncate ${
-                            isDone ? "line-through text-muted-foreground" : ""
-                          }`}>
+                          <p className={`text-sm font-medium text-foreground group-hover:text-primary transition-colors truncate ${isDone ? "line-through text-muted-foreground" : ""
+                            }`}>
                             {task.title}
                           </p>
                           {task.description && (
@@ -403,9 +403,8 @@ function ProjectDetailsPage() {
 
                         <Badge
                           variant={isDone ? "default" : isInProgress ? "secondary" : "outline"}
-                          className={`text-[10px] ${
-                            isDone ? "bg-emerald-600/20 text-emerald-600 dark:text-emerald-400 border-emerald-500/20" : ""
-                          }`}
+                          className={`text-[10px] ${isDone ? "bg-emerald-600/20 text-emerald-600 dark:text-emerald-400 border-emerald-500/20" : ""
+                            }`}
                         >
                           {task.status === "IN_PROGRESS" ? "In Progress" : task.status}
                         </Badge>

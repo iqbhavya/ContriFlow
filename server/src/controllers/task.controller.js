@@ -16,8 +16,9 @@ const {
 const createTask = async (req, res) => {
   try {
     const { title, description, projectId, deadline } = req.body;
-
-    if (!title || !projectId) {
+    const parsedProjectId = Number(projectId);
+    
+    if (!title || Number.isNaN(parsedProjectId)) {
       return res.status(400).json({
         message: "Title and Project ID are required",
       });
@@ -27,7 +28,7 @@ const createTask = async (req, res) => {
       userId: req.user.userId,
       title,
       description,
-      projectId,
+      projectId: parsedProjectId,
       deadline,
     });
 
@@ -48,6 +49,8 @@ const createTask = async (req, res) => {
     });
   }
 };
+
+
 
 const assignTask = async (req, res) => {
   try {

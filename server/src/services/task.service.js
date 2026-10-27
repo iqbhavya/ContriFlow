@@ -18,9 +18,10 @@ const createTaskService = async ({ userId, title, description, projectId, deadli
     error.status = 404;
     throw error;
   }
-
+  // Check Membership
+  const projectMembership = await requireProjectMember(userId, projectId);
   // Check lead
-  const projectMembership = await requireProjectLead(userId, projectId);
+  const projectLeadMembership = await requireProjectLead(userId, projectId);
 
   if (projectMembership === null) {
     const error = new Error("You are not a member of this project");
@@ -28,7 +29,7 @@ const createTaskService = async ({ userId, title, description, projectId, deadli
     throw error;
   }
 
-  if (projectMembership === false) {
+  if (projectLeadMembership === false) {
     const error = new Error("Only project leads can create tasks");
     error.status = 403;
     throw error;
@@ -50,6 +51,7 @@ const createTaskService = async ({ userId, title, description, projectId, deadli
     where: { id: userId },
     select: { name: true }
   });
+  
   const creatorName = projectCreator ? projectCreator.name : "A project lead";
   await notifyProjectMembers(projectId, `${creatorName} created task '${task.title}' in project '${project.name}'`, userId);
 
