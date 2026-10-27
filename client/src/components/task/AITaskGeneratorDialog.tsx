@@ -14,6 +14,8 @@ import { Button } from "../ui/button";
 import { Textarea } from "../ui/textarea";
 import { Sparkles } from "lucide-react";
 
+import { toast } from "sonner";
+
 type Props = {
     projectId: number;
     onTasksCreated: () => void;
@@ -80,6 +82,7 @@ export default function AITaskGeneratorDialog({ projectId, onTasksCreated }: Pro
             }
 
             onTasksCreated();
+            toast.success(`${createdCount} tasks created successfully`);
             setSuggestions([]);
             setPrompt("");
             setOpen(false);
@@ -161,9 +164,38 @@ export default function AITaskGeneratorDialog({ projectId, onTasksCreated }: Pro
 
                     {suggestions.length > 0 && (
                         <div className="space-y-3">
-                            <h3 className="font-medium">
-                                Review suggestions ({suggestions.length})
-                            </h3>
+                            <div className="flex items-center justify-between">
+                                <h3 className="font-medium">
+                                    Review suggestions
+                                </h3>
+
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => {
+                                        const allSelected = suggestions.every(
+                                            (task) => task.selected
+                                        );
+
+                                        setSuggestions((current) =>
+                                            current.map((task) => ({
+                                                ...task,
+                                                selected: !allSelected,
+                                            }))
+                                        );
+                                    }}
+                                >
+                                    {suggestions.every((task) => task.selected)
+                                        ? "Deselect All"
+                                        : "Select All"}
+                                </Button>
+                            </div>
+
+                            <p className="text-sm text-muted-foreground">
+                                {suggestions.filter((task) => task.selected).length} of{" "}
+                                {suggestions.length} selected
+                            </p>
 
                             <div className="max-h-80 space-y-4 overflow-y-auto pr-2">
                                 {suggestions.map((task, index) => (
