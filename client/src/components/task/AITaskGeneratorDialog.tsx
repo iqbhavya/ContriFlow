@@ -54,23 +54,29 @@ export default function AITaskGeneratorDialog({ projectId, onTasksCreated }: Pro
     };
 
     const handleCreateSelected = async () => {
-        const selectedTasks = suggestions.filter((task) => task.selected);
+        const selectedTasks = suggestions.filter(
+            (task) => task.selected && task.title.trim()
+        );
 
         if (selectedTasks.length === 0) {
-            setError("Select at least one task.");
+            setError("Select at least one task with a title.");
             return;
         }
 
         setSaving(true);
         setError("");
 
+        let createdCount = 0;
+
         try {
             for (const task of selectedTasks) {
                 await createTask({
-                    title: task.title,
-                    description: task.description,
+                    title: task.title.trim(),
+                    description: task.description.trim(),
                     projectId,
                 });
+
+                createdCount++;
             }
 
             onTasksCreated();
@@ -79,8 +85,26 @@ export default function AITaskGeneratorDialog({ projectId, onTasksCreated }: Pro
             setOpen(false);
         } catch (err) {
             console.error(err);
+
+            // Remove tasks already created from the pending suggestions.
+            setSuggestions((current) =>
+                current.filter(
+                    (task) =>
+                        !selectedTasks
+                            .slice(0, createdCount)
+                            .some(
+                                (created) =>
+                                    created.title === task.title &&
+                                    created.description === task.description
+                            )
+                )
+            );
+
+            onTasksCreated();
+
             setError(
-                "Could not create all selected tasks. Check the project task list before retrying."
+                `${createdCount} task(s) created successfully. ` +
+                `The remaining tasks were not all created. Review the list before retrying.`
             );
         } finally {
             setSaving(false);
