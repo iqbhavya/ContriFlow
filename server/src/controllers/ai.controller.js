@@ -47,9 +47,10 @@ const generateTaskSuggestions = async (req, res) => {
                 message: "Gemini API key is not configured",
             });
         }
+        const startTime = Date.now();
 
         const response = await fetch(
-            "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent",
+            "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent",
             {
                 method: "POST",
                 headers: {
@@ -62,27 +63,22 @@ const generateTaskSuggestions = async (req, res) => {
                             parts: [
                                 {
                                     text: `
-You are a project task planner.
+Generate exactly 5 practical tasks for this project:
 
-Generate 5 to 8 practical tasks based on this project description:
 ${prompt.trim()}
 
-Return only JSON in this exact structure:
+Return only JSON:
 {
   "tasks": [
     {
-      "title": "Short task title",
-      "description": "Clear description of the work"
+      "title": "Short actionable title",
+      "description": "Brief description"
     }
   ]
 }
 
-Rules:
-- Keep titles concise and actionable.
-- Make descriptions useful to a student development team.
-- Avoid duplicate tasks.
-- Do not include markdown or code fences.
-- Do not assign users or invent deadlines.
+Keep descriptions concise, avoid duplicates,
+and do not include markdown or deadlines.
 `,
                                 },
                             ],
@@ -91,10 +87,14 @@ Rules:
                     generationConfig: {
                         responseMimeType: "application/json",
                         temperature: 0.4,
-                        maxOutputTokens: 2000,
+                        maxOutputTokens: 1000,
                     },
                 }),
             }
+        );
+
+        console.log(
+        `Gemini response time: ${Date.now() - startTime}ms`
         );
 
         if (!response.ok) {
