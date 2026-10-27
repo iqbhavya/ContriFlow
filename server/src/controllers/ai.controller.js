@@ -57,6 +57,7 @@ const generateTaskSuggestions = async (req, res) => {
                     "Content-Type": "application/json",
                     "x-goog-api-key": process.env.GEMINI_API_KEY,
                 },
+                signal: AbortSignal.timeout(30000),
                 body: JSON.stringify({
                     contents: [
                         {
