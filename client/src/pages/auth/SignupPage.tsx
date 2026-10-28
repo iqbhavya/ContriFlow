@@ -30,6 +30,7 @@ function SignupPage() {
   const [email, setEmail] = useState("");
   const [resendCountdown, setResendCountdown] = useState(60);
   const [resending, setResending] = useState(false);
+  const [verifying, setVerifying] = useState(false);
 
   const {
     register,
@@ -65,6 +66,10 @@ function SignupPage() {
       toast.success("OTP sent to your Gmail address.");
     } catch (error: any) {
       console.error(error);
+      const retryAfter = error?.response?.data?.retryAfter;
+      if (retryAfter) {
+        setResendCountdown(retryAfter);
+      }
       toast.error(
         error?.response?.data?.message || "Failed to send OTP."
       );
@@ -78,6 +83,7 @@ function SignupPage() {
     }
 
     try {
+      setVerifying(true);
       await verifyOtp(email, otp);
 
       toast.success("Email verified! Account created successfully.");
@@ -87,6 +93,8 @@ function SignupPage() {
       toast.error(
         error?.response?.data?.message || "OTP verification failed."
       );
+    } finally {
+      setVerifying(false);
     }
   };
 
@@ -223,6 +231,7 @@ function SignupPage() {
                     autoComplete="one-time-code"
                     placeholder="Enter 6-digit OTP"
                     maxLength={6}
+                    disabled={verifying}
                     className="h-9 text-sm tracking-widest"
                     value={otp}
                     onChange={(event) =>
@@ -234,17 +243,17 @@ function SignupPage() {
                 <Button
                   type="button"
                   className="w-full h-9 text-xs font-medium cursor-pointer"
-                  disabled={isSubmitting || otp.length !== 6}
+                  disabled={verifying || otp.length !== 6}
                   onClick={onVerifyOtp}
                 >
-                  Verify OTP
+                  {verifying ? "Verifying OTP..." : "Verify OTP"}
                 </Button>
 
                 <Button
                   type="button"
                   variant="outline"
                   className="w-full h-9 text-xs"
-                  disabled={resending || resendCountdown > 0}
+                  disabled={verifying || resending || resendCountdown > 0}
                   onClick={onResendOtp}
                 >
                   {resending
@@ -258,6 +267,7 @@ function SignupPage() {
                   type="button"
                   variant="outline"
                   className="w-full h-9 text-xs"
+                  disabled={verifying || resending}
                   onClick={() => {
                     setOtpSent(false);
                     setOtp("");

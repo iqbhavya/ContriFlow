@@ -31,13 +31,30 @@ const signup  = async (req, res) => {
     }
 
     const existingUser = await prisma.user.findUnique({
-        where: { email },
+        where: { email: normalizedEmail },
     });
 
     if(existingUser) {
         return res.status(400).json({
             message: "User already exists" 
         });
+    }
+
+    const existingPending = await prisma.emailVerification.findUnique({
+      where: { email: normalizedEmail },
+    });
+
+    if (existingPending) {
+      const now = Date.now();
+      const elapsed = now - new Date(existingPending.lastSentAt).getTime();
+      const cooldownMs = 60 * 1000;
+      if (elapsed < cooldownMs) {
+        const retryAfter = Math.ceil((cooldownMs - elapsed) / 1000);
+        return res.status(429).json({
+          message: `Please wait ${retryAfter} seconds before requesting another verification code.`,
+          retryAfter,
+        });
+      }
     }
 
     const otp = generateOtp();
@@ -112,19 +129,15 @@ const verifyOtp = async (req, res) => {
 
     // Check OTP expiration
     if (new Date() > pendingUser.expiresAt) {
-      await prisma.emailVerification.delete({
-        where: { email: normalizedEmail },
-      });
-
       return res.status(400).json({
-        message: "OTP expired. Please sign up again.",
+        message: "OTP has expired. Please request a new verification code.",
       });
     }
 
     // Limit incorrect attempts
     if (pendingUser.attempts >= 5) {
       return res.status(429).json({
-        message: "Too many incorrect attempts. Please sign up again.",
+        message: "Too many incorrect attempts. Please request a new verification code.",
       });
     }
 
@@ -218,6 +231,18 @@ const resendOtp = async (req, res) => {
     }
 
     const now = Date.now();
+
+    // Expire stale verification sessions older than 24 hours
+    if (now - new Date(pendingUser.createdAt).getTime() > 24 * 60 * 60 * 1000) {
+      await prisma.emailVerification.delete({
+        where: { email: normalizedEmail },
+      }).catch(() => {});
+
+      return res.status(404).json({
+        message: "Signup session expired. Please sign up again.",
+      });
+    }
+
     const elapsed = now - new Date(pendingUser.lastSentAt).getTime();
     const cooldownMs = 60 * 1000;
 
@@ -263,6 +288,11 @@ const resendOtp = async (req, res) => {
     } catch (emailError) {
       console.error("Resend OTP email error:", emailError);
 
+      await prisma.emailVerification.update({
+        where: { email: normalizedEmail },
+        data: { lastSentAt: pendingUser.lastSentAt },
+      }).catch(() => {});
+
       return res.status(500).json({
         message: "Could not send the OTP email. Please try again later.",
       });
@@ -289,8 +319,10 @@ const login = async (req, res) => {
             return res.status(400).json({ message: "All fields are required" });
         }
 
+        const normalizedEmail = String(email).trim().toLowerCase();
+
         const user = await prisma.user.findUnique({
-            where: { email },
+            where: { email: normalizedEmail },
         });
 
         if (!user) {
