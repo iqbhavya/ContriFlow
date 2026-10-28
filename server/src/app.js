@@ -17,7 +17,7 @@ const app = express();
 
 app.use(express.json());
 app.use(cors({
-  origin : "https://contriflow-five.vercel.app"
+  origin : "https://contriflow-workspace.vercel.app"
 }));
 
 app.use("/api/auth", authRoutes);
