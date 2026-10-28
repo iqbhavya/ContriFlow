@@ -42,7 +42,7 @@ const signup  = async (req, res) => {
 
     const otp = generateOtp();
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const passwordHash = await bcrypt.hash(password, 10);
     const otpHash = await bcrypt.hash(otp, 10);
 
     await prisma.emailVerification.upsert({
@@ -85,6 +85,8 @@ const signup  = async (req, res) => {
     });
   }
 };
+
+
 
 const login = async (req, res) => {
     try {
