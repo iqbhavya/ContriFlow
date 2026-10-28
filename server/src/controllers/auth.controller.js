@@ -40,29 +40,50 @@ const signup  = async (req, res) => {
         });
     }
 
+    const otp = generateOtp();
+
     const hashedPassword = await bcrypt.hash(password, 10);
+    const otpHash = await bcrypt.hash(otp, 10);
 
-    const user = await prisma.user.create({
-        data: {
-            name,
-            email,
-            password: hashedPassword,
-        },
+    await prisma.emailVerification.upsert({
+      where: { email: normalizedEmail },
+      update: {
+        name: name.trim(),
+        passwordHash,
+        otpHash,
+        expiresAt: new Date(Date.now() + 10 * 60 * 1000),
+        attempts: 0,
+        createdAt: new Date(),
+      },
+      create: {
+        email: normalizedEmail,
+        name: name.trim(),
+        passwordHash,
+        otpHash,
+        expiresAt: new Date(Date.now() + 10 * 60 * 1000),
+      },
     });
 
-    res.status(201).json({
-        message: "User created successfully",
-        user: {
-            id: user.id,
-            name: user.name,
-            email: user.email,
-        },
-    });
-    }catch (error) {
-        console.error(error);
-        res.status(500).json({ message: "Internal server error" 
-        });
+    try {
+      await sendOtpEmail(normalizedEmail, otp);
+    } catch (emailError) {
+      await prisma.emailVerification.deleteMany({
+        where: { email: normalizedEmail },
+      });
+
+      throw emailError;
     }
+
+    return res.status(200).json({
+      message: "OTP sent to your Gmail address",
+    });
+  } catch (error) {
+    console.error("Signup error:", error);
+
+    return res.status(500).json({
+      message: "Could not start signup. Please try again.",
+    });
+  }
 };
 
 const login = async (req, res) => {
