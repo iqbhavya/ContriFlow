@@ -25,3 +25,12 @@ export const signup = async (
 
   return response.data;
 };
+
+export const verifyOtp = async (email: string, otp: string) => {
+  const response = await api.post("/auth/verify-otp", {
+    email,
+    otp,
+  });
+
+  return response.data;
+};
