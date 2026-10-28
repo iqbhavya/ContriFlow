@@ -16,7 +16,9 @@ const aiRoutes = require("./routes/ai.routes");
 const app = express();
 
 app.use(express.json());
-app.use(cors());
+app.use(cors({
+  origin : "https://contriflow-five.vercel.app"
+}));
 
 app.use("/api/auth", authRoutes);
 
