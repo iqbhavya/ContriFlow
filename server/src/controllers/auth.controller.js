@@ -3,6 +3,9 @@ const bcrypt = require("bcryptjs");
 
 const jwt = require("jsonwebtoken");
 
+const { generateOtp } = require("../utils/otp");
+const { sendOtpEmail } = require("../services/email.service");
+
 const signup  = async (req, res) => {
     try{
       const { name, email, password } = req.body;
@@ -11,6 +14,21 @@ const signup  = async (req, res) => {
         return res.status(400).json({ 
             message: "All fields are required" });
     } 
+
+    const normalizedEmail = email.trim().toLowerCase();
+
+    // Allow Gmail addresses only
+    if (!/^[^\s@]+@gmail\.com$/.test(normalizedEmail)) {
+      return res.status(400).json({
+        message: "Please use a valid Gmail address",
+      });
+    }
+
+    if (password.length < 8) {
+      return res.status(400).json({
+        message: "Password must be at least 8 characters",
+      });
+    }
 
     const existingUser = await prisma.user.findUnique({
         where: { email },

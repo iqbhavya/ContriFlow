@@ -197,6 +197,16 @@ exports.Prisma.NotificationScalarFieldEnum = {
   createdAt: 'createdAt'
 };
 
+exports.Prisma.EmailVerificationScalarFieldEnum = {
+  email: 'email',
+  name: 'name',
+  passwordHash: 'passwordHash',
+  otpHash: 'otpHash',
+  expiresAt: 'expiresAt',
+  attempts: 'attempts',
+  createdAt: 'createdAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -236,7 +246,8 @@ exports.Prisma.ModelName = {
   TaskMember: 'TaskMember',
   Contribution: 'Contribution',
   ContributionMember: 'ContributionMember',
-  Notification: 'Notification'
+  Notification: 'Notification',
+  EmailVerification: 'EmailVerification'
 };
 
 /**
