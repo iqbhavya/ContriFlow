@@ -11229,6 +11229,7 @@ export namespace Prisma {
     expiresAt: Date | null
     attempts: number | null
     createdAt: Date | null
+    lastSentAt: Date | null
   }
 
   export type EmailVerificationMaxAggregateOutputType = {
@@ -11239,6 +11240,7 @@ export namespace Prisma {
     expiresAt: Date | null
     attempts: number | null
     createdAt: Date | null
+    lastSentAt: Date | null
   }
 
   export type EmailVerificationCountAggregateOutputType = {
@@ -11249,6 +11251,7 @@ export namespace Prisma {
     expiresAt: number
     attempts: number
     createdAt: number
+    lastSentAt: number
     _all: number
   }
 
@@ -11269,6 +11272,7 @@ export namespace Prisma {
     expiresAt?: true
     attempts?: true
     createdAt?: true
+    lastSentAt?: true
   }
 
   export type EmailVerificationMaxAggregateInputType = {
@@ -11279,6 +11283,7 @@ export namespace Prisma {
     expiresAt?: true
     attempts?: true
     createdAt?: true
+    lastSentAt?: true
   }
 
   export type EmailVerificationCountAggregateInputType = {
@@ -11289,6 +11294,7 @@ export namespace Prisma {
     expiresAt?: true
     attempts?: true
     createdAt?: true
+    lastSentAt?: true
     _all?: true
   }
 
@@ -11386,6 +11392,7 @@ export namespace Prisma {
     expiresAt: Date
     attempts: number
     createdAt: Date
+    lastSentAt: Date
     _count: EmailVerificationCountAggregateOutputType | null
     _avg: EmailVerificationAvgAggregateOutputType | null
     _sum: EmailVerificationSumAggregateOutputType | null
@@ -11415,6 +11422,7 @@ export namespace Prisma {
     expiresAt?: boolean
     attempts?: boolean
     createdAt?: boolean
+    lastSentAt?: boolean
   }, ExtArgs["result"]["emailVerification"]>
 
   export type EmailVerificationSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -11425,6 +11433,7 @@ export namespace Prisma {
     expiresAt?: boolean
     attempts?: boolean
     createdAt?: boolean
+    lastSentAt?: boolean
   }, ExtArgs["result"]["emailVerification"]>
 
   export type EmailVerificationSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -11435,6 +11444,7 @@ export namespace Prisma {
     expiresAt?: boolean
     attempts?: boolean
     createdAt?: boolean
+    lastSentAt?: boolean
   }, ExtArgs["result"]["emailVerification"]>
 
   export type EmailVerificationSelectScalar = {
@@ -11445,9 +11455,10 @@ export namespace Prisma {
     expiresAt?: boolean
     attempts?: boolean
     createdAt?: boolean
+    lastSentAt?: boolean
   }
 
-  export type EmailVerificationOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"email" | "name" | "passwordHash" | "otpHash" | "expiresAt" | "attempts" | "createdAt", ExtArgs["result"]["emailVerification"]>
+  export type EmailVerificationOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"email" | "name" | "passwordHash" | "otpHash" | "expiresAt" | "attempts" | "createdAt" | "lastSentAt", ExtArgs["result"]["emailVerification"]>
 
   export type $EmailVerificationPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "EmailVerification"
@@ -11460,6 +11471,7 @@ export namespace Prisma {
       expiresAt: Date
       attempts: number
       createdAt: Date
+      lastSentAt: Date
     }, ExtArgs["result"]["emailVerification"]>
     composites: {}
   }
@@ -11890,6 +11902,7 @@ export namespace Prisma {
     readonly expiresAt: FieldRef<"EmailVerification", 'DateTime'>
     readonly attempts: FieldRef<"EmailVerification", 'Int'>
     readonly createdAt: FieldRef<"EmailVerification", 'DateTime'>
+    readonly lastSentAt: FieldRef<"EmailVerification", 'DateTime'>
   }
     
 
@@ -12377,7 +12390,8 @@ export namespace Prisma {
     otpHash: 'otpHash',
     expiresAt: 'expiresAt',
     attempts: 'attempts',
-    createdAt: 'createdAt'
+    createdAt: 'createdAt',
+    lastSentAt: 'lastSentAt'
   };
 
   export type EmailVerificationScalarFieldEnum = (typeof EmailVerificationScalarFieldEnum)[keyof typeof EmailVerificationScalarFieldEnum]
@@ -13104,6 +13118,7 @@ export namespace Prisma {
     expiresAt?: DateTimeFilter<"EmailVerification"> | Date | string
     attempts?: IntFilter<"EmailVerification"> | number
     createdAt?: DateTimeFilter<"EmailVerification"> | Date | string
+    lastSentAt?: DateTimeFilter<"EmailVerification"> | Date | string
   }
 
   export type EmailVerificationOrderByWithRelationInput = {
@@ -13114,6 +13129,7 @@ export namespace Prisma {
     expiresAt?: SortOrder
     attempts?: SortOrder
     createdAt?: SortOrder
+    lastSentAt?: SortOrder
   }
 
   export type EmailVerificationWhereUniqueInput = Prisma.AtLeast<{
@@ -13127,6 +13143,7 @@ export namespace Prisma {
     expiresAt?: DateTimeFilter<"EmailVerification"> | Date | string
     attempts?: IntFilter<"EmailVerification"> | number
     createdAt?: DateTimeFilter<"EmailVerification"> | Date | string
+    lastSentAt?: DateTimeFilter<"EmailVerification"> | Date | string
   }, "email">
 
   export type EmailVerificationOrderByWithAggregationInput = {
@@ -13137,6 +13154,7 @@ export namespace Prisma {
     expiresAt?: SortOrder
     attempts?: SortOrder
     createdAt?: SortOrder
+    lastSentAt?: SortOrder
     _count?: EmailVerificationCountOrderByAggregateInput
     _avg?: EmailVerificationAvgOrderByAggregateInput
     _max?: EmailVerificationMaxOrderByAggregateInput
@@ -13155,6 +13173,7 @@ export namespace Prisma {
     expiresAt?: DateTimeWithAggregatesFilter<"EmailVerification"> | Date | string
     attempts?: IntWithAggregatesFilter<"EmailVerification"> | number
     createdAt?: DateTimeWithAggregatesFilter<"EmailVerification"> | Date | string
+    lastSentAt?: DateTimeWithAggregatesFilter<"EmailVerification"> | Date | string
   }
 
   export type UserCreateInput = {
@@ -13712,6 +13731,7 @@ export namespace Prisma {
     expiresAt: Date | string
     attempts?: number
     createdAt?: Date | string
+    lastSentAt?: Date | string
   }
 
   export type EmailVerificationUncheckedCreateInput = {
@@ -13722,6 +13742,7 @@ export namespace Prisma {
     expiresAt: Date | string
     attempts?: number
     createdAt?: Date | string
+    lastSentAt?: Date | string
   }
 
   export type EmailVerificationUpdateInput = {
@@ -13732,6 +13753,7 @@ export namespace Prisma {
     expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
     attempts?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    lastSentAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type EmailVerificationUncheckedUpdateInput = {
@@ -13742,6 +13764,7 @@ export namespace Prisma {
     expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
     attempts?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    lastSentAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type EmailVerificationCreateManyInput = {
@@ -13752,6 +13775,7 @@ export namespace Prisma {
     expiresAt: Date | string
     attempts?: number
     createdAt?: Date | string
+    lastSentAt?: Date | string
   }
 
   export type EmailVerificationUpdateManyMutationInput = {
@@ -13762,6 +13786,7 @@ export namespace Prisma {
     expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
     attempts?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    lastSentAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type EmailVerificationUncheckedUpdateManyInput = {
@@ -13772,6 +13797,7 @@ export namespace Prisma {
     expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
     attempts?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    lastSentAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type IntFilter<$PrismaModel = never> = {
@@ -14449,6 +14475,7 @@ export namespace Prisma {
     expiresAt?: SortOrder
     attempts?: SortOrder
     createdAt?: SortOrder
+    lastSentAt?: SortOrder
   }
 
   export type EmailVerificationAvgOrderByAggregateInput = {
@@ -14463,6 +14490,7 @@ export namespace Prisma {
     expiresAt?: SortOrder
     attempts?: SortOrder
     createdAt?: SortOrder
+    lastSentAt?: SortOrder
   }
 
   export type EmailVerificationMinOrderByAggregateInput = {
@@ -14473,6 +14501,7 @@ export namespace Prisma {
     expiresAt?: SortOrder
     attempts?: SortOrder
     createdAt?: SortOrder
+    lastSentAt?: SortOrder
   }
 
   export type EmailVerificationSumOrderByAggregateInput = {

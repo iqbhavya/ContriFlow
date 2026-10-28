@@ -54,6 +54,7 @@ const signup  = async (req, res) => {
         expiresAt: new Date(Date.now() + 10 * 60 * 1000),
         attempts: 0,
         createdAt: new Date(),
+        lastSentAt: new Date(),
       },
       create: {
         email: normalizedEmail,
@@ -61,6 +62,7 @@ const signup  = async (req, res) => {
         passwordHash,
         otpHash,
         expiresAt: new Date(Date.now() + 10 * 60 * 1000),
+        lastSentAt: new Date(),
       },
     });
 
@@ -192,6 +194,93 @@ const verifyOtp = async (req, res) => {
   }
 };
 
+
+const resendOtp = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email || typeof email !== "string") {
+      return res.status(400).json({
+        message: "Email is required",
+      });
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+
+    const pendingUser = await prisma.emailVerification.findUnique({
+      where: { email: normalizedEmail },
+    });
+
+    if (!pendingUser) {
+      return res.status(404).json({
+        message: "No pending signup found. Please sign up again.",
+      });
+    }
+
+    const now = Date.now();
+    const elapsed = now - new Date(pendingUser.lastSentAt).getTime();
+    const cooldownMs = 60 * 1000;
+
+    if (elapsed < cooldownMs) {
+      const retryAfter = Math.ceil((cooldownMs - elapsed) / 1000);
+
+      return res.status(429).json({
+        message: `Please wait ${retryAfter} seconds before requesting another OTP.`,
+        retryAfter,
+      });
+    }
+
+    const otp = generateOtp();
+    const otpHash = await bcrypt.hash(otp, 10);
+    const sentAt = new Date();
+
+    // Atomically claim the cooldown so concurrent requests
+    // cannot send multiple OTPs.
+    const updated = await prisma.emailVerification.updateMany({
+      where: {
+        email: normalizedEmail,
+        lastSentAt: {
+          lte: new Date(now - cooldownMs),
+        },
+      },
+      data: {
+        otpHash,
+        expiresAt: new Date(now + 10 * 60 * 1000),
+        attempts: 0,
+        lastSentAt: sentAt,
+      },
+    });
+
+    if (updated.count === 0) {
+      return res.status(429).json({
+        message: "An OTP was requested recently. Please wait 60 seconds.",
+        retryAfter: 60,
+      });
+    }
+
+    try {
+      await sendOtpEmail(normalizedEmail, otp);
+    } catch (emailError) {
+      console.error("Resend OTP email error:", emailError);
+
+      return res.status(500).json({
+        message: "Could not send the OTP email. Please try again later.",
+      });
+    }
+
+    return res.status(200).json({
+      message: "A new OTP has been sent to your Gmail address.",
+    });
+  } catch (error) {
+    console.error("Resend OTP error:", error);
+
+    return res.status(500).json({
+      message: "Could not resend OTP. Please try again.",
+    });
+  }
+};
+
+
 const login = async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -237,7 +326,8 @@ const login = async (req, res) => {
 module.exports = {
     signup,
     login,
-    verifyOtp
+    verifyOtp,
+    resendOtp
 };
 
 

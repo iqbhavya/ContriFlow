@@ -167,4 +167,5 @@ model EmailVerification {
   expiresAt    DateTime
   attempts     Int      @default(0)
   createdAt    DateTime @default(now())
+  lastSentAt   DateTime @default(now())
 }

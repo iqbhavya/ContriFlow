@@ -1,10 +1,10 @@
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate, Link, Navigate } from "react-router-dom";
 
-import { signup, verifyOtp } from "../../services/auth.service";
+import { signup, verifyOtp, resendOtp } from "../../services/auth.service";
 import {
   signupSchema,
   type SignupFormData,
@@ -19,6 +19,8 @@ import { Button } from "../../components/ui/button";
 import { toast } from "sonner";
 import ContriFlowLogo from "../../components/common/ContriFlowLogo";
 
+
+
 function SignupPage() {
   const navigate = useNavigate();
   const { token, authLoading } = useAuth();
@@ -26,15 +28,27 @@ function SignupPage() {
   const [otpSent, setOtpSent] = useState(false);
   const [otp, setOtp] = useState("");
   const [email, setEmail] = useState("");
+  const [resendCountdown, setResendCountdown] = useState(60);
+  const [resending, setResending] = useState(false);
 
   const {
     register,
     handleSubmit,
-    getValues,
+    
     formState: { errors, isSubmitting },
   } = useForm<SignupFormData>({
     resolver: zodResolver(signupSchema),
   });
+
+  useEffect(() => {
+    if (!otpSent || resendCountdown <= 0) return;
+
+    const timer = window.setTimeout(() => {
+      setResendCountdown((current) => Math.max(0, current - 1));
+    }, 1000);
+
+    return () => window.clearTimeout(timer);
+  }, [otpSent, resendCountdown]);
 
   if (!authLoading && token) {
     return <Navigate to="/projects" replace />;
@@ -46,6 +60,7 @@ function SignupPage() {
 
       setEmail(data.email.trim().toLowerCase());
       setOtpSent(true);
+      setResendCountdown(60);
 
       toast.success("OTP sent to your Gmail address.");
     } catch (error: any) {
@@ -74,6 +89,32 @@ function SignupPage() {
       );
     }
   };
+
+  const onResendOtp = async () => {
+    try {
+      setResending(true);
+
+      await resendOtp(email);
+
+      setOtp("");
+      setResendCountdown(60);
+      toast.success("A new OTP has been sent to your Gmail.");
+    } catch (error: any) {
+      const retryAfter = error?.response?.data?.retryAfter;
+
+      if (retryAfter) {
+        setResendCountdown(retryAfter);
+      }
+
+      toast.error(
+        error?.response?.data?.message || "Could not resend OTP."
+      );
+    } finally {
+      setResending(false);
+    }
+  };
+
+
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4 py-12">
@@ -197,6 +238,20 @@ function SignupPage() {
                   onClick={onVerifyOtp}
                 >
                   Verify OTP
+                </Button>
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full h-9 text-xs"
+                  disabled={resending || resendCountdown > 0}
+                  onClick={onResendOtp}
+                >
+                  {resending
+                    ? "Resending..."
+                    : resendCountdown > 0
+                      ? `Resend OTP in ${resendCountdown}s`
+                      : "Resend OTP"}
                 </Button>
 
                 <Button

@@ -204,7 +204,8 @@ exports.Prisma.EmailVerificationScalarFieldEnum = {
   otpHash: 'otpHash',
   expiresAt: 'expiresAt',
   attempts: 'attempts',
-  createdAt: 'createdAt'
+  createdAt: 'createdAt',
+  lastSentAt: 'lastSentAt'
 };
 
 exports.Prisma.SortOrder = {
