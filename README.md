@@ -26,7 +26,7 @@ Unlike traditional project management tools that simply mark tasks as "done", Co
 ## 🚀 Key Features
 
 * **🔐 Secure Authentication & Verification:**
-  * Gmail-validated registration requiring 6-digit one-time passwords (OTP) sent via Nodemailer.
+  * Gmail-validated registration requiring 6-digit one-time passwords (OTP) sent via Brevo.
   * Resend OTP with 60-second cooldown rate-limiting and 5-attempt brute-force protection.
   * JWT session handling with bcrypt password hashing.
 
@@ -76,7 +76,7 @@ Unlike traditional project management tools that simply mark tasks as "done", Co
 * **ORM:** Prisma ORM
 * **Database:** PostgreSQL
 * **Authentication:** JSON Web Tokens (JWT) & bcryptjs
-* **Email Service:** Nodemailer (Gmail SMTP integration)
+* **Email Service:** Brevo (Sendinblue) Transactional Email API
 * **AI Integration:** Google Gemini API (`gemini-2.5-flash-lite`)
 
 ---
@@ -233,7 +233,7 @@ erDiagram
 * **npm:** v9.0.0 or higher
 * **PostgreSQL:** Running locally or a hosted instance (e.g. Supabase, Neon, Railway)
 * **Google Gemini API Key:** Free key from [Google AI Studio](https://aistudio.google.com/)
-* **Gmail Account with App Password:** For sending verification OTPs via SMTP
+* **Brevo (Sendinblue) API Key:** For sending transactional OTP emails
 
 ---
 
@@ -268,13 +268,10 @@ cd club-contribution-tracker
    # Google Gemini API Key for AI Task Generation
    GEMINI_API_KEY="AIzaSy..."
 
-   # Gmail SMTP for OTP Verification
-   SMTP_USER="your-email@gmail.com"
-   SMTP_PASS="your-16-character-gmail-app-password"
+   # Brevo API for OTP Verification
+   BREVO_API_KEY="xkeysib-..."
+   BREVO_SENDER_EMAIL="your-verified-sender@domain.com"
    ```
-
-   > [!TIP]
-   > To generate a Gmail App Password, enable 2-Step Verification on your Google Account and visit **Security > 2-Step Verification > App Passwords**.
 
 4. Run Prisma database migrations & client generation:
    ```bash
